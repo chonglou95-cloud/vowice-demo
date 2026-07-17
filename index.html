@@ -301,7 +301,9 @@ body { margin:0; background:#EDEAE4; }
   display:flex; align-items:center; justify-content:center; box-shadow:var(--shadow-soft); }
 #b2 .ctl-btn.muted { background:var(--rose-soft); color:var(--rose-deep); }
 #b2 .ctl-end .ctl-btn { width:70px; height:70px; background:var(--rose); color:#FFF; box-shadow:var(--shadow-lift); }
-#b2 .ctl-end { margin-top:-7px; }
+#b2 .ctl-end { margin-top:-7px; transition:opacity .35s ease, transform .35s ease; }
+#b2 .ctl-end.pending { opacity:0; transform:scale(.85); pointer-events:none; }
+#b2 .call-tip { flex:none; text-align:center; font-size:11.5px; color:var(--ink-2); padding:0 24px 4px; min-height:18px; }
 #b2 .chat-top { display:flex; align-items:center; justify-content:space-between; padding:8px 20px 10px; border-bottom:1px solid var(--hair); }
 #b2 .chat-top .ct-name { font-family:var(--serif); font-size:19px; font-weight:700; }
 #b2 .chat-top .ct-sub { font-size:10.5px; color:var(--ink-2); font-family:var(--mono); letter-spacing:.12em; margin-top:2px; }
@@ -321,7 +323,12 @@ body { margin:0; background:#EDEAE4; }
 #b2 .backbtn { border:none; background:var(--surface); box-shadow:var(--shadow-soft); border-radius:50%;
   width:38px; height:38px; display:flex; align-items:center; justify-content:center; color:var(--ink); cursor:pointer; flex:none; }
 #b2 .ib-round { width:38px; height:38px; border-radius:50%; background:var(--rose-soft); color:var(--rose-deep); border:none;
-  display:flex; align-items:center; justify-content:center; flex:none; cursor:pointer; }
+  display:flex; align-items:center; justify-content:center; flex:none; cursor:pointer; position:relative; }
+#b2 .ib-round.pulse::after { content:""; position:absolute; inset:0; border-radius:50%; animation:pulse 2s ease-out infinite; }
+#b2 .guide { flex:none; margin:0 16px 8px; display:flex; align-items:center; justify-content:center; gap:6px;
+  font-size:11.5px; line-height:1.5; color:var(--rose-deep); background:var(--rose-soft);
+  border-radius:14px; padding:8px 12px; animation:fadein .3s ease; }
+#b2 .guide svg { flex:none; }
 #b2 .attach-pop { position:absolute; right:14px; bottom:96px; background:#FDFBFB; border-radius:16px;
   box-shadow:var(--shadow-lift); padding:8px; display:flex; flex-direction:column; gap:2px; z-index:30; animation:fadein .15s ease; }
 #b2 .attach-pop button { display:flex; align-items:center; gap:10px; border:none; background:none; cursor:pointer;
@@ -555,6 +562,10 @@ body.pt-shot #b1 .statusbar, body.pt-shot #b2 .statusbar, body.pt-shot #b3 .stat
 body.pt-shot #b1 .foot { padding-bottom:40px; }
 body.pt-shot #b2 .tabbar, body.pt-shot #b3 .tabbar { padding-bottom:24px; }
 body.pt-shot #b2 .controls { padding-bottom:36px; }
+/* 走查引导(文字页进语音的提示 / 语音页的听完提示)不进作品集截图——真机无此提示，
+   截图应是纯产品界面；语音钮的脉冲同理 */
+body.pt-shot #b2 .guide, body.pt-shot #b2 .call-tip { display:none; }
+body.pt-shot #b2 .ib-round.pulse::after { display:none; }
 
 </style>
 </head>
@@ -2125,7 +2136,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   const VoiceCall = ({
     go,
     demo,
-    setDemo
+    setDemo,
+    onDone
   }) => {
     const vd = V();
     const [idx, setIdx] = useState(0);
@@ -2163,6 +2175,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         return () => clearTimeout(t);
       }
     }, [demo]);
+    /* 预设剧本走到最后一步(dur=0)即算听完；demo 态直接放行，便于走查随时退出 */
+    const scriptDone = !!demo || idx >= SCRIPT.length - 1;
     const stateKey = demo === 'silence' ? 'LISTENING' : demo === 'asr' ? 'LISTENING' : SCRIPT[idx].st;
     const stCls = {
       LISTENING: 'st-listen',
@@ -2232,6 +2246,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         marginTop: 30
       }
     }, "\u8BF4\u70B9\u4EC0\u4E48\u5427\uFF0C\u6211\u5728\u542C\u3002")), /*#__PURE__*/React.createElement("div", {
+      className: "call-tip"
+    }, scriptDone ? '聊完了，挂断就回到文字，这次对话还在继续' : '这是一段预设对话，听完就可以挂断'), /*#__PURE__*/React.createElement("div", {
       className: "controls",
       style: {
         justifyContent: 'center',
@@ -2246,8 +2262,11 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       d: muted ? I.micOff : I.mic,
       size: 21
     })), muted ? '已静音' : '静音'), /*#__PURE__*/React.createElement("button", {
-      className: "ctl ctl-end",
-      onClick: () => go('text', '语音已收起，这次对话还在继续。')
+      className: 'ctl ctl-end' + (scriptDone ? '' : ' pending'),
+      onClick: () => {
+        onDone();
+        go('text', '语音已收起，这次对话还在继续。');
+      }
     }, /*#__PURE__*/React.createElement("span", {
       className: "ctl-btn"
     }, /*#__PURE__*/React.createElement(Icon, {
@@ -2257,13 +2276,15 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   };
 
   /* ── S11 文字对话(主界面 · 2026-07-16 修订):
-     左上返回 = 唯一退出(有对话内容→收尾仪式生成记忆卡；一句没聊→直接回主页，原型演示恒走收尾);
-     输入条 = [语音钮(左端，一键进语音)] [输入框] [＋号(相册/拍照)] [发送];
-     挂断语音回到这里时，插入一条系统提示，会话继续 ── */
+     左上返回 = 唯一退出；输入条 = [语音钮(左端，一键进语音)] [输入框] [＋号(相册/拍照)] [发送];
+     挂断语音回到这里时，插入一条系统提示，会话继续
+     2026-07-17 修订：两条记忆(桉树叶/小时候与海)是这次通话的产物，故未通话过时返回=直接回主页，
+     不走收尾仪式；并在输入条上方给一条引导，把走查者带进语音 ── */
   const TextChat = ({
     go,
     sysNote,
-    opener
+    opener,
+    voiceDone
   }) => {
     const vd = V();
     const [msgs, setMsgs] = useState(() => {
@@ -2336,8 +2357,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       }
     }, /*#__PURE__*/React.createElement("button", {
       className: "backbtn",
-      onClick: () => go('end'),
-      "aria-label": "\u8FD4\u56DE\u5E76\u7ED3\u675F\u5BF9\u8BDD"
+      onClick: () => go(voiceDone ? 'end' : 'home'),
+      "aria-label": voiceDone ? '返回并结束对话' : '返回主页'
     }, /*#__PURE__*/React.createElement(Icon, {
       d: I.back,
       size: 18
@@ -2383,10 +2404,20 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }, /*#__PURE__*/React.createElement(Icon, {
       d: I.camera,
       size: 17
-    }), "\u62CD\u7167")), /*#__PURE__*/React.createElement("div", {
+    }), "\u62CD\u7167")), voiceDone ? /*#__PURE__*/React.createElement("div", {
+      className: "guide"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      d: I.back,
+      size: 13
+    }), "\u70B9\u5DE6\u4E0A\u89D2\u7ED3\u675F\u8FD9\u6B21\u5BF9\u8BDD\uFF0C\u503C\u5F97\u8BB0\u4F4F\u7684\u4F1A\u6536\u8FDB\u56DE\u5FC6") : /*#__PURE__*/React.createElement("div", {
+      className: "guide"
+    }, /*#__PURE__*/React.createElement(Icon, {
+      d: I.wave,
+      size: 13
+    }), "\u60F3\u542C\u542C ", vd.ta, " \u7684\u58F0\u97F3\uFF1F\u70B9\u5DE6\u4E0B\u89D2\u8FDB\u5165\u8BED\u97F3\u901A\u8BDD"), /*#__PURE__*/React.createElement("div", {
       className: "input-bar"
     }, /*#__PURE__*/React.createElement("button", {
-      className: "ib-round",
+      className: 'ib-round' + (voiceDone ? '' : ' pulse'),
       onClick: () => go('voice'),
       "aria-label": "\u8BED\u97F3\u901A\u8BDD"
     }, /*#__PURE__*/React.createElement(Icon, {
@@ -2751,6 +2782,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     const [toastMsg, setToastMsg] = useState(null);
     const [sysNote, setSysNote] = useState(null); // 挂断语音回文字时，插入聊天流的系统提示
     const [opener, setOpener] = useState(initOpener || null); // 主页问候卡/日常话题卡带入:以 TA 开场白进入文字页
+    const [voiceDone, setVoiceDone] = useState(false); // 是否完整听完过一次语音通话(决定文字页返回是否走记忆卡收尾)
     const toast = t => {
       setToastMsg(t);
       setTimeout(() => setToastMsg(null), 2000);
@@ -2771,12 +2803,14 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         go: go,
         demo: demo,
         setDemo: setDemo,
+        onDone: () => setVoiceDone(true),
         key: demo || 'v'
       }),
       text: /*#__PURE__*/React.createElement(TextChat, {
         go: go,
         sysNote: sysNote,
         opener: opener,
+        voiceDone: voiceDone,
         key: (sysNote || '') + '|' + (opener || 't')
       }),
       redo: /*#__PURE__*/React.createElement(Redo, {
