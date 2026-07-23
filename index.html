@@ -582,7 +582,7 @@ body.pt-shot #b2 .ib-round.pulse::after { display:none; }
   <div class="pt-head">
     <div class="pt-eyebrow">VOWICE · PROTOTYPE</div>
     <h1>声契 Vowice 产品原型</h1>
-    <p class="pt-note">以下为设计阶段产品原型，可直接点击体验产品流程。产品 MVP 已完成开发并在 iOS 真机跑通。批次①中设定的名字与称呼，会带入批次②③。</p>
+    <p class="pt-note">以下为设计阶段的可点击交互原型，因未接入后端，音色试听、语音通话等仅作交互演示，暂不播放实际音频；产品 MVP 已完成开发，上述功能已在 iOS 真机实现并跑通。批次①中设定的名字与称呼，会带入批次②③。</p>
     <div class="pt-tabs">
       <button class="pt-tab cur" data-k="b1">① 核心流程</button>
       <button class="pt-tab" data-k="b2">② 通话与记忆</button>
@@ -1251,7 +1251,12 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     onChange: e => set({
       nick: e.target.value
     })
-  }))), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("p", {
+    className: "hint",
+    style: {
+      marginTop: 2
+    }
+  }, "\u4E3A\u65B9\u4FBF\u5FEB\u901F\u4F53\u9A8C\u6D41\u7A0B\uFF0C\u539F\u578B\u9884\u586B\u4E86\u793A\u4F8B\u540D\u5B57\uFF0C\u53EF\u76F4\u63A5\u70B9\u300C\u4E0B\u4E00\u6B65\u300D\uFF0C\u4E5F\u53EF\u4EE5\u81EA\u884C\u4FEE\u6539\u3002\u6B63\u5F0F\u4EA7\u54C1\u4E2D\u7531\u7528\u6237\u81EA\u5DF1\u586B\u5199\u3002")), /*#__PURE__*/React.createElement("div", {
     className: "foot"
   }, /*#__PURE__*/React.createElement("button", {
     className: "btn btn-primary",
@@ -1402,6 +1407,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   }) => {
     const [loading, setLoading] = useState(true);
     const [playing, setPlaying] = useState(null);
+    const [hinted, setHinted] = useState(false); /* 点过声纹后常驻「原型无音频」提示 */
     useEffect(() => {
       const t = setTimeout(() => setLoading(false), 1400);
       return () => clearTimeout(t);
@@ -1464,6 +1470,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: 'vp' + (playing === i ? '' : ' quiet'),
       onClick: e => {
         e.stopPropagation();
+        setHinted(true);
         setPlaying(playing === i ? null : i);
       },
       "aria-label": playing === i ? '暂停' : '播放'
@@ -1488,7 +1495,19 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         width: 34,
         textAlign: 'right'
       }
-    }, "0:0", 6 + i)))), /*#__PURE__*/React.createElement("div", {
+    }, "0:0", 6 + i)))), hinted && /*#__PURE__*/React.createElement("div", {
+      style: {
+        margin: '2px 24px 0',
+        background: 'var(--rose-soft)',
+        borderRadius: 14,
+        padding: '9px 12px',
+        fontSize: 11.5,
+        lineHeight: 1.6,
+        color: 'var(--rose-deep)',
+        textAlign: 'center',
+        animation: 'fadein .3s ease'
+      }
+    }, "\u539F\u578B\u6CA1\u6709\u63A5\u5165\u97F3\u9891\uFF0C\u771F\u673A\u7248\u53EF\u4EE5\u6B63\u5E38\u64AD\u653E\u3002", /*#__PURE__*/React.createElement("br", null), "\u9009\u4E00\u4E2A\u97F3\u8272\uFF0C\u70B9\u300C\u5C31\u662F\u8FD9\u4E2A\u58F0\u97F3\u300D\u7EE7\u7EED\u3002"), /*#__PURE__*/React.createElement("div", {
       className: "foot"
     }, /*#__PURE__*/React.createElement("button", {
       className: "btn btn-primary",
@@ -1649,7 +1668,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }, "\u8FD9\u5F20\u5361\u7247\u4F1A\u4F5C\u4E3A\u7B2C 1 \u6761\u8BB0\u5FC6\uFF0C\u6536\u8FDB\u300C\u56DE\u5FC6\u300D\u3002"))));
   };
 
-  /* ── S9 占位：通话(批次②) ── */
+  /* ── S9 衔接页：初始设定完成 → 批次②(第 118 天演示态) ── */
   const Done = ({
     st,
     go
@@ -1682,12 +1701,12 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     style: {
       fontSize: 20
     }
-  }, "\u9996\u6B21\u6D41\u7A0B\u8D70\u67E5\u5B8C\u6210"), /*#__PURE__*/React.createElement("p", {
+  }, "\u521D\u59CB\u5316\u8BBE\u5B9A\u5DF2\u5B8C\u6210"), /*#__PURE__*/React.createElement("p", {
     className: "desc",
     style: {
       marginTop: 10
     }
-  }, "\u901A\u8BDD\u53CC\u6A21\u754C\u9762\u3001\u8BB0\u5FC6\u5361\u3001\u4E3B\u9875\u4E0E\u56DE\u5FC6", /*#__PURE__*/React.createElement("br", null), "\u5728\u6279\u6B21 \u2461 \u4E2D\u7EE7\u7EED\u8D70\u67E5\u3002")), /*#__PURE__*/React.createElement("div", {
+  }, "\u4E3A\u4E86\u8BA9\u4F60\u76F4\u63A5\u770B\u5230\u76F8\u5904\u4E00\u6BB5\u65F6\u95F4\u540E\u7684\u6837\u5B50\uFF0C", /*#__PURE__*/React.createElement("br", null), "\u63A5\u4E0B\u6765\u7684\u6F14\u793A\u5B9A\u683C\u5728\u7B2C 118 \u5929\u2026\u2026", /*#__PURE__*/React.createElement("br", null), "TA \u5DF2\u7ECF\u8BB0\u5F97\u4F60\u7684\u5F88\u591A\u4E8B\u3002")), /*#__PURE__*/React.createElement("div", {
     className: "foot"
   }, /*#__PURE__*/React.createElement("button", {
     className: "btn btn-primary",
@@ -1695,7 +1714,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       marginBottom: 10
     },
     onClick: () => window.__VGO('b2', 'home')
-  }, "\u8FDB\u5165\u6279\u6B21 \u2461 \xB7 \u901A\u8BDD\u4E0E\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("button", {
+  }, "\u8FDB\u5165\u2461 \u901A\u8BDD\u4E0E\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-secondary",
     onClick: () => go('welcome')
   }, "\u4ECE\u5934\u518D\u8D70\u4E00\u904D")));
@@ -1727,12 +1746,13 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     name: '8 · 声契仪式'
   }, {
     id: 'done',
-    name: '✓ 完成占位'
+    name: '✓ 设定完成'
   }];
+  /* 名字/称呼预填示例值：方便面试官快速过流程，想改可直接改；重置数据后仍为预填态 */
   const INIT = {
     gender: null,
-    taName: '',
-    nick: '',
+    taName: '沈屿',
+    nick: '小满',
     sliders: SLIDERS,
     preset: null,
     variant: null,
@@ -1745,10 +1765,15 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     const [scr, setScr] = useState(initScreen || 'welcome');
     const [st, setSt] = useState(() => {
       const saved = window.VDATA.read().b1;
-      return saved ? {
+      const st0 = saved ? {
         ...INIT,
         ...saved
-      } : INIT;
+      } : {
+        ...INIT
+      };
+      if (!st0.taName) st0.taName = '沈屿';
+      if (!st0.nick) st0.nick = '小满';
+      return st0;
     });
     const set = patch => setSt(s => {
       const n = {
@@ -2009,6 +2034,14 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }, "\u5F00\u59CB\u4ECA\u5929\u7684\u5BF9\u8BDD")))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "pad"
     }, /*#__PURE__*/React.createElement("div", {
+      className: "guide",
+      style: {
+        margin: '0 0 10px'
+      }
+    }, /*#__PURE__*/React.createElement(Icon, {
+      d: "M6 9l6 6 6-6",
+      size: 13
+    }), "\u70B9\u4E0B\u9762\u7684\u95EE\u5019\u5361\u56DE\u590D", vd.ta, "\uFF0C\u8FDB\u5165\u5BF9\u8BDD"), /*#__PURE__*/React.createElement("div", {
       className: "today-card",
       style: {
         cursor: 'pointer'
@@ -2310,12 +2343,20 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     const [draft, setDraft] = useState('');
     const [playing, setPlaying] = useState(null);
     const [attach, setAttach] = useState(false);
+    const [playHinted, setPlayHinted] = useState(false); /* 首次点 PLAY 时在聊天流插一条「原型无音频」系统提示 */
     useEffect(() => {
       if (playing != null) {
         const t = setTimeout(() => setPlaying(null), 2400);
         return () => clearTimeout(t);
       }
     }, [playing]);
+    /* AI 气泡长按(550ms)进「反馈·重说」；真机同为长按唤起 */
+    const pressT = useRef(null);
+    const pressStart = () => {
+      clearTimeout(pressT.current);
+      pressT.current = setTimeout(() => go('redo'), 550);
+    };
+    const pressEnd = () => clearTimeout(pressT.current);
     const ref = useRef(null);
     useEffect(() => {
       if (ref.current) ref.current.scrollTop = ref.current.scrollHeight;
@@ -2382,12 +2423,30 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         className: (m.who === 'ai' ? 'b-ai' : 'b-me') + ' bubble' + (playing === i ? ' playing' : ''),
         style: m.photo ? {
           padding: 6
-        } : null
+        } : m.who === 'ai' ? {
+          WebkitUserSelect: 'none',
+          userSelect: 'none',
+          WebkitTouchCallout: 'none'
+        } : null,
+        onPointerDown: m.who === 'ai' ? pressStart : undefined,
+        onPointerUp: m.who === 'ai' ? pressEnd : undefined,
+        onPointerLeave: m.who === 'ai' ? pressEnd : undefined,
+        onPointerCancel: m.who === 'ai' ? pressEnd : undefined,
+        onContextMenu: m.who === 'ai' ? e => e.preventDefault() : undefined
       }, m.photo ? /*#__PURE__*/React.createElement("div", {
         className: "photo-bubble"
       }) : m.text, m.who === 'ai' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
         className: "speak-btn",
-        onClick: () => setPlaying(playing === i ? null : i)
+        onClick: () => {
+          if (!playHinted) {
+            setPlayHinted(true);
+            setMsgs(ms => [...ms, {
+              who: 'sys',
+              text: '原型无音频，PLAY 仅演示界面。真机版可播放 TA 的语音。'
+            }]);
+          }
+          setPlaying(playing === i ? null : i);
+        }
       }, /*#__PURE__*/React.createElement(Icon, {
         d: I.vol,
         size: 13
@@ -3722,7 +3781,7 @@ const SHEET = {
   b1: { screens: [
     ['welcome','1 · 欢迎'], ['gender','2 · 设定TA：声线'], ['name','3 · 设定TA：名字称呼'],
     ['entry','4 · 声音工坊：入口'], ['sliders','5 · 工坊：五滑杆'], ['presets','6 · 工坊：六预设'],
-    ['variants','7 · 工坊：三音色试听'], ['vow','8 · 声契仪式'], ['done','✓ 完成占位'],
+    ['variants','7 · 工坊：三音色试听'], ['vow','8 · 声契仪式'], ['done','✓ 设定完成'],
   ]},
   b2: { screens: [
     ['home','8 · 主页'], ['text','11 · 文字对话(主界面)'], ['voice','10 · 语音通话(内嵌)'],
