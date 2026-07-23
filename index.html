@@ -1254,9 +1254,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   })), /*#__PURE__*/React.createElement("p", {
     className: "hint",
     style: {
-      marginTop: 2
+      marginTop: 16
     }
-  }, "\u4E3A\u65B9\u4FBF\u5FEB\u901F\u4F53\u9A8C\u6D41\u7A0B\uFF0C\u539F\u578B\u9884\u586B\u4E86\u793A\u4F8B\u540D\u5B57\uFF0C\u53EF\u76F4\u63A5\u70B9\u300C\u4E0B\u4E00\u6B65\u300D\uFF0C\u4E5F\u53EF\u4EE5\u81EA\u884C\u4FEE\u6539\u3002\u6B63\u5F0F\u4EA7\u54C1\u4E2D\u7531\u7528\u6237\u81EA\u5DF1\u586B\u5199\u3002")), /*#__PURE__*/React.createElement("div", {
+  }, "\u4E3A\u65B9\u4FBF\u5FEB\u901F\u4F53\u9A8C\u6D41\u7A0B\uFF0C\u539F\u578B\u9884\u586B\u4E86\u793A\u4F8B\u540D\u5B57\uFF0C", /*#__PURE__*/React.createElement("br", null), "\u53EF\u76F4\u63A5\u70B9\u300C\u4E0B\u4E00\u6B65\u300D\uFF0C\u4E5F\u53EF\u4EE5\u81EA\u884C\u4FEE\u6539\u3002", /*#__PURE__*/React.createElement("br", null), "\u6B63\u5F0F\u4EA7\u54C1\u4E2D\u7531\u7528\u6237\u81EA\u884C\u586B\u5199\u3002")), /*#__PURE__*/React.createElement("div", {
     className: "foot"
   }, /*#__PURE__*/React.createElement("button", {
     className: "btn btn-primary",
@@ -1497,7 +1497,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       }
     }, "0:0", 6 + i)))), hinted && /*#__PURE__*/React.createElement("div", {
       style: {
-        margin: '2px 24px 0',
+        margin: '14px 24px 0',
         background: 'var(--rose-soft)',
         borderRadius: 14,
         padding: '9px 12px',
@@ -1992,7 +1992,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   const GREETING = '今天风大，把想说的话都吹到我这边来吧。';
   const Home = ({
     go,
-    emptyMode
+    emptyMode,
+    tourDone
   }) => {
     const vd = V();
     return /*#__PURE__*/React.createElement("div", {
@@ -2033,7 +2034,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       onClick: () => go('text')
     }, "\u5F00\u59CB\u4ECA\u5929\u7684\u5BF9\u8BDD")))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "pad"
-    }, /*#__PURE__*/React.createElement("div", {
+    }, !tourDone && /*#__PURE__*/React.createElement("div", {
       className: "guide",
       style: {
         margin: '0 0 10px'
@@ -2615,7 +2616,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 
   /* ── S13 结束→记忆卡 ── */
   const EndCall = ({
-    go
+    go,
+    onFinish
   }) => {
     const [phase, setPhase] = useState('extract');
     const [kept, setKept] = useState({
@@ -2699,7 +2701,10 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       }
     }, /*#__PURE__*/React.createElement("button", {
       className: "btn btn-primary",
-      onClick: () => go('moments')
+      onClick: () => {
+        onFinish && onFinish();
+        go('moments');
+      }
     }, "\u6536\u8FDB\u56DE\u5FC6")));
   };
 
@@ -2842,6 +2847,14 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     const [sysNote, setSysNote] = useState(null); // 挂断语音回文字时，插入聊天流的系统提示
     const [opener, setOpener] = useState(initOpener || null); // 主页问候卡/日常话题卡带入:以 TA 开场白进入文字页
     const [voiceDone, setVoiceDone] = useState(false); // 是否完整听完过一次语音通话(决定文字页返回是否走记忆卡收尾)
+    /* 首次引导是否已走完(记忆卡收进回忆即算)——写入 VDATA,刷新/切批次不复活,重置数据后恢复 */
+    const [tourDone, setTourDone] = useState(() => !!window.VDATA.read().tourDone);
+    const finishTour = () => {
+      window.VDATA.save({
+        tourDone: true
+      });
+      setTourDone(true);
+    };
     const toast = t => {
       setToastMsg(t);
       setTimeout(() => setToastMsg(null), 2000);
@@ -2856,7 +2869,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     const view = {
       home: /*#__PURE__*/React.createElement(Home, {
         go: go,
-        emptyMode: emptyMode
+        emptyMode: emptyMode,
+        tourDone: tourDone
       }),
       voice: /*#__PURE__*/React.createElement(VoiceCall, {
         go: go,
@@ -2877,6 +2891,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       }),
       end: /*#__PURE__*/React.createElement(EndCall, {
         go: go,
+        onFinish: finishTour,
         key: "end"
       }),
       moments: /*#__PURE__*/React.createElement(Moments, null)
