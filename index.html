@@ -1172,7 +1172,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       textAlign: 'center',
       marginTop: 14
     }
-  }, "TA \u662F AI\uFF0C\u4E0D\u662F\u771F\u4EBA\u3002", /*#__PURE__*/React.createElement("br", null), "\u7EE7\u7EED\u5373\u8868\u793A\u4F60\u5DF2\u5E74\u6EE1 16 \u5C81\uFF0C\u5E76\u540C\u610F\u9690\u79C1\u6761\u6B3E\u3002")));
+  }, "TA \u662F AI\uFF0C\u4E0D\u662F\u771F\u4EBA\u3002", /*#__PURE__*/React.createElement("br", null), "\u7EE7\u7EED\u5373\u8868\u793A\u4F60\u5DF2\u5E74\u6EE1 18 \u5C81\uFF0C\u5E76\u540C\u610F\u9690\u79C1\u6761\u6B3E\u3002")));
 
   /* ── S2 选性别 ── */
   const Gender = ({
@@ -2171,11 +2171,19 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     go,
     demo,
     setDemo,
-    onDone
+    onDone,
+    onCarry
   }) => {
     const vd = V();
     const [idx, setIdx] = useState(0);
     const [msgs, setMsgs] = useState([]);
+    /* 收起语音 = 把这段语音的转写并入文字页的同一条会话(真机语音/文字共用一个消息仓库) */
+    const msgsRef = useRef([]);
+    msgsRef.current = msgs;
+    const leave = () => {
+      onCarry(msgsRef.current);
+      go('text', '语音已收起，这次对话还在继续。');
+    };
     const [muted, setMuted] = useState(false);
     const [secs, setSecs] = useState(204);
     useEffect(() => {
@@ -2204,7 +2212,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         }]);
         const t = setTimeout(() => {
           setDemo(null);
-          go('text', '语音已收起，这次对话还在继续。');
+          leave();
         }, 2800);
         return () => clearTimeout(t);
       }
@@ -2299,7 +2307,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: 'ctl ctl-end' + (scriptDone ? '' : ' pending'),
       onClick: () => {
         onDone();
-        go('text', '语音已收起，这次对话还在继续。');
+        leave();
       }
     }, /*#__PURE__*/React.createElement("span", {
       className: "ctl-btn"
@@ -2313,34 +2321,16 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
      左上返回 = 唯一退出；输入条 = [语音钮(左端，一键进语音)] [输入框] [＋号(相册/拍照)] [发送];
      挂断语音回到这里时，插入一条系统提示，会话继续
      2026-07-17 修订：两条记忆(桉树叶/小时候与海)是这次通话的产物，故未通话过时返回=直接回主页，
-     不走收尾仪式；并在输入条上方给一条引导，把走查者带进语音 ── */
+     不走收尾仪式；并在输入条上方给一条引导，把走查者带进语音
+     2026-07-23 修订：消息流上提到 App(见 CHAT_SEED)——语音与文字是同一条会话，
+     挂断后语音里的转写会并入这里(方案 A「切换不断上下文，同一会话继续」，真机共用一个消息仓库) ── */
   const TextChat = ({
     go,
-    sysNote,
-    opener,
+    msgs,
+    setMsgs,
     voiceDone
   }) => {
     const vd = V();
-    const [msgs, setMsgs] = useState(() => {
-      /* 主页问候卡带入(opener):这句话以 TA 开场白落地,用户接着回就进入对话 */
-      const base = opener ? [{
-        who: 'ai',
-        text: opener
-      }] : [{
-        who: 'ai',
-        text: '打字就可以，我在。'
-      }, {
-        who: 'me',
-        text: '嗯，在地铁上，不方便讲话。'
-      }, {
-        who: 'ai',
-        text: '那就慢慢打字，不着急。刚才说到小时候——后来呢？'
-      }];
-      return sysNote ? [...base, {
-        who: 'sys',
-        text: sysNote
-      }] : base;
-    });
     const [draft, setDraft] = useState('');
     const [playing, setPlaying] = useState(null);
     const [attach, setAttach] = useState(false);
@@ -2436,6 +2426,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         onContextMenu: m.who === 'ai' ? e => e.preventDefault() : undefined
       }, m.photo ? /*#__PURE__*/React.createElement("div", {
         className: "photo-bubble"
+      }) : m.mem ? /*#__PURE__*/React.createElement(MemText, {
+        text: m.text
       }) : m.text, m.who === 'ai' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("button", {
         className: "speak-btn",
         onClick: () => {
@@ -2815,6 +2807,17 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   };
 
   /* ── App ── */
+  /* 文字页的默认开场(未由问候卡/话题卡带入时) */
+  const CHAT_SEED = [{
+    who: 'ai',
+    text: '打字就可以，我在。'
+  }, {
+    who: 'me',
+    text: '嗯，在地铁上，不方便讲话。'
+  }, {
+    who: 'ai',
+    text: '那就慢慢打字，不着急。刚才说到小时候——后来呢？'
+  }];
   const SCREENS = [{
     id: 'home',
     name: '8 · 主页'
@@ -2844,9 +2847,15 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     const [emptyMode, setEmptyMode] = useState(!!initEmpty);
     const [demo, setDemo] = useState(initDemo || null);
     const [toastMsg, setToastMsg] = useState(null);
-    const [sysNote, setSysNote] = useState(null); // 挂断语音回文字时，插入聊天流的系统提示
-    const [opener, setOpener] = useState(initOpener || null); // 主页问候卡/日常话题卡带入:以 TA 开场白进入文字页
+    /* 语音与文字共用这一条消息流(方案 A:同一会话继续)——null=会话尚未开始 */
+    const [chat, setChat] = useState(() => initOpener ? [{
+      who: 'ai',
+      text: initOpener
+    }] : initScreen === 'text' ? CHAT_SEED : null);
+    const setChatMsgs = updater => setChat(prev => updater(prev || CHAT_SEED));
     const [voiceDone, setVoiceDone] = useState(false); // 是否完整听完过一次语音通话(决定文字页返回是否走记忆卡收尾)
+    /* 挂断语音:把这段语音的转写(我说的/TA 说的)并入文字页的同一条会话,系统提示由 go() 追加在其后 */
+    const carryVoice = vmsgs => setChat(prev => [...(prev || CHAT_SEED), ...(vmsgs || []).filter(m => m.who === 'ai' || m.who === 'me')]);
     /* 首次引导是否已走完(记忆卡收进回忆即算)——写入 VDATA,刷新/切批次不复活,重置数据后恢复 */
     const [tourDone, setTourDone] = useState(() => !!window.VDATA.read().tourDone);
     const finishTour = () => {
@@ -2859,10 +2868,22 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       setToastMsg(t);
       setTimeout(() => setToastMsg(null), 2000);
     };
+    /* note=挂断语音后的系统提示;open=问候卡/话题卡带入的 TA 开场白(会话未开始则以它开场) */
     const go = (s, note, open) => {
       setDemo(null);
-      setSysNote(note || null);
-      setOpener(open || null);
+      if (s === 'text') setChat(prev => {
+        let next = prev ? open ? [...prev, {
+          who: 'ai',
+          text: open
+        }] : prev : open ? [{
+          who: 'ai',
+          text: open
+        }] : CHAT_SEED;
+        return note ? [...next, {
+          who: 'sys',
+          text: note
+        }] : next;
+      });
       setScr(s);
     };
     const showTab = scr === 'home' || scr === 'moments';
@@ -2877,14 +2898,14 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         demo: demo,
         setDemo: setDemo,
         onDone: () => setVoiceDone(true),
+        onCarry: carryVoice,
         key: demo || 'v'
       }),
       text: /*#__PURE__*/React.createElement(TextChat, {
         go: go,
-        sysNote: sysNote,
-        opener: opener,
-        voiceDone: voiceDone,
-        key: (sysNote || '') + '|' + (opener || 't')
+        msgs: chat || CHAT_SEED,
+        setMsgs: setChatMsgs,
+        voiceDone: voiceDone
       }),
       redo: /*#__PURE__*/React.createElement(Redo, {
         go: go
@@ -3367,7 +3388,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "setting-list"
     }, /*#__PURE__*/React.createElement("button", {
       className: "srow",
-      onClick: () => toast('TA 档案(名字/称呼/声音)沿用工坊，原型略')
+      onClick: () => toast('TA 的档案沿用工坊原型设定，原型暂不支持修改')
     }, /*#__PURE__*/React.createElement("span", null, vd.ta, " \u7684\u6863\u6848", /*#__PURE__*/React.createElement("div", {
       className: "sd"
     }, "\u540D\u5B57 \xB7 \u79F0\u547C \xB7 \u58F0\u97F3")), /*#__PURE__*/React.createElement("span", {
@@ -3417,7 +3438,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "setting-list"
     }, /*#__PURE__*/React.createElement("button", {
       className: "srow",
-      onClick: () => toast('16+ · v0.1 原型')
+      onClick: () => toast('v0.1 原型')
     }, /*#__PURE__*/React.createElement("span", null, "\u5173\u4E8E\u58F0\u5951"), /*#__PURE__*/React.createElement("span", {
       className: "sv"
     }, "v0.1 ", /*#__PURE__*/React.createElement(Icon, {
@@ -3579,7 +3600,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     className: "scr"
   }, /*#__PURE__*/React.createElement(PageHead, {
     title: "\u9690\u79C1\u4E0E\u5B89\u5168",
-    sub: "PRIVACY \xB7 78% \u7684\u4EBA\u6700\u5728\u610F\u8FD9\u4EF6\u4E8B",
+    sub: "PRIVACY",
     onBack: () => go('settings')
   }), /*#__PURE__*/React.createElement("div", {
     className: "scroll",
@@ -3649,10 +3670,10 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     className: "setting-list"
   }, /*#__PURE__*/React.createElement("button", {
     className: "srow",
-    onClick: () => toast('16+ 产品 · 详情见 PRD SAF-01')
+    onClick: () => toast('TA 是 AI，不替代专业帮助')
   }, /*#__PURE__*/React.createElement("span", null, "\u5E74\u9F84\u4E0E\u4F7F\u7528\u8FB9\u754C", /*#__PURE__*/React.createElement("div", {
     className: "sd"
-  }, "16 \u5C81\u4EE5\u4E0A\u4F7F\u7528\uFF1BTA \u662F AI\uFF0C\u4E0D\u66FF\u4EE3\u4E13\u4E1A\u5E2E\u52A9")), /*#__PURE__*/React.createElement("span", {
+  }, "18 \u5C81\u53CA\u4EE5\u4E0A\u4F7F\u7528\uFF1BTA \u662F AI\uFF0C\u4E0D\u66FF\u4EE3\u4E13\u4E1A\u5E2E\u52A9")), /*#__PURE__*/React.createElement("span", {
     className: "sv"
   }, /*#__PURE__*/React.createElement(Icon, {
     d: I.chevR,
