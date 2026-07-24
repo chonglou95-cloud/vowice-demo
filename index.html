@@ -28,7 +28,9 @@ body { margin:0; background:#EDEAE4; }
 .pt-head { max-width:1180px; margin:0 auto; padding:26px 24px 0; }
 .pt-eyebrow { font-family:var(--sh-mono); font-size:10.5px; letter-spacing:.22em; color:var(--sh-rose-deep); }
 .pt-head h1 { font-family:var(--sh-serif); font-size:23px; margin:8px 0 0; font-weight:700; }
-.pt-note { font-size:12.5px; color:var(--sh-ink2); line-height:1.8; margin:8px 0 0; max-width:54em; }
+.pt-note { font-size:12.5px; color:var(--sh-ink2); line-height:1.8; margin:8px 0 0; max-width:74em; }
+.pt-note-meta { font-family:var(--sh-mono); font-size:10.5px; letter-spacing:.04em;
+  color:var(--sh-rose-deep); line-height:1.7; margin:4px 0 0; }
 .pt-tabs { display:flex; gap:8px; margin-top:18px; flex-wrap:wrap; }
 .pt-tab { font-family:var(--sh-sans); font-size:13px; color:var(--sh-ink2); background:var(--sh-card);
   border:1px solid var(--sh-hair); border-radius:999px; padding:8px 18px; cursor:pointer; }
@@ -78,6 +80,15 @@ body { margin:0; background:#EDEAE4; }
 @keyframes spin { to { transform:translate(-50%,-50%) rotate(360deg);} }
 @keyframes eq { from { transform:scaleY(.5);} to { transform:scaleY(1.22);} }
 @keyframes ld { 0%,100% { opacity:.3;} 50% { opacity:1;} }
+@keyframes pulse { 0% { box-shadow:0 0 0 0 rgba(168,101,122,.45); } 100% { box-shadow:0 0 0 11px rgba(168,101,122,0); } }
+@keyframes tourPulse {
+  0%,100% { box-shadow:0 0 0 0 rgba(168,101,122,.12), var(--shadow-soft); transform:scale(1); }
+  50% { box-shadow:0 0 0 9px rgba(168,101,122,.18), var(--shadow-lift); transform:scale(1.018); }
+}
+@keyframes guideFloat {
+  from { opacity:0; transform:translateY(8px); }
+  to { opacity:1; transform:none; }
+}
 /* ═══ 批次① CSS（构建时自 原型_批次1 提取并作用域到 #b1） ═══ */
 #b1 { --bg:#FBF7F8; --bg-grad:linear-gradient(160deg,#F5EBED 0%,#EFE8EF 50%,#FBF7F8 100%);
   --ink:#3A2E34; --ink-2:#6E5E64;
@@ -325,10 +336,13 @@ body { margin:0; background:#EDEAE4; }
 #b2 .ib-round { width:38px; height:38px; border-radius:50%; background:var(--rose-soft); color:var(--rose-deep); border:none;
   display:flex; align-items:center; justify-content:center; flex:none; cursor:pointer; position:relative; }
 #b2 .ib-round.pulse::after { content:""; position:absolute; inset:0; border-radius:50%; animation:pulse 2s ease-out infinite; }
+#b2 .tour-pulse-card, #b2 .tour-pulse-button, #b2 .backbtn.tour-pulse { animation:tourPulse 2s ease-in-out infinite; position:relative; z-index:1; }
 #b2 .guide { flex:none; margin:0 16px 8px; display:flex; align-items:center; justify-content:center; gap:6px;
   font-size:11.5px; line-height:1.5; color:var(--rose-deep); background:var(--rose-soft);
   border-radius:14px; padding:8px 12px; animation:fadein .3s ease; }
 #b2 .guide svg { flex:none; }
+#b2 .guide.guide-complete { align-items:flex-start; flex-direction:column; gap:3px; padding:10px 12px; }
+#b2 .guide.guide-complete div:first-child { font-weight:600; }
 #b2 .attach-pop { position:absolute; right:14px; bottom:96px; background:#FDFBFB; border-radius:16px;
   box-shadow:var(--shadow-lift); padding:8px; display:flex; flex-direction:column; gap:2px; z-index:30; animation:fadein .15s ease; }
 #b2 .attach-pop button { display:flex; align-items:center; gap:10px; border:none; background:none; cursor:pointer;
@@ -341,6 +355,12 @@ body { margin:0; background:#EDEAE4; }
 #b2 .end-sum { text-align:center; padding:26px 24px 6px; }
 #b2 .end-sum .es-time { font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-indent:.18em; color:var(--ink-2); }
 #b2 .end-sum h2 { font-family:var(--serif); font-size:24px; margin-top:10px; }
+#b2 .memory-guide { margin:14px auto 0; max-width:310px; color:var(--ink-2); font-size:12px;
+  line-height:1.72; animation:guideFloat .45s ease both; }
+#b2 .memory-guide p + p { margin-top:2px; }
+#b2 .memory-card-list { flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:14px;
+  margin-top:12px; padding:2px 24px 18px; scrollbar-width:none; }
+#b2 .memory-card-list::-webkit-scrollbar { display:none; }
 #b2 .mem-card { background:var(--card); border-radius:var(--r-card); padding:18px; box-shadow:var(--shadow-soft); position:relative; }
 #b2 .mem-card.off { opacity:.45; }
 #b2 .mem-card .mc-date { font-family:var(--mono); font-size:10px; letter-spacing:.14em; color:var(--ink-2); }
@@ -348,6 +368,24 @@ body { margin:0; background:#EDEAE4; }
 #b2 .mem-card p { font-size:13px; color:var(--ink-2); line-height:1.7; }
 #b2 .mem-card .keep { position:absolute; top:14px; right:14px; border:none; background:var(--rose-soft);
   color:var(--rose-deep); font-size:11px; border-radius:14px; padding:5px 12px; cursor:pointer; font-family:var(--sans); }
+#b2 .memory-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
+#b2 .memory-actions button { border:none; border-radius:14px; padding:6px 12px; cursor:pointer; font-family:var(--sans);
+  font-size:11px; color:var(--rose-deep); background:var(--rose-soft); }
+#b2 .memory-actions button.warn { color:#A84A3A; background:rgba(168,74,58,.09); }
+#b2 .memory-editor { width:100%; min-height:66px; resize:vertical; border:1px solid rgba(168,101,122,.26);
+  background:#FFF; color:var(--ink); border-radius:12px; padding:10px 11px; outline:none;
+  font:13px/1.65 var(--sans); }
+#b2 .end-action { flex:none; padding:8px 24px 36px; }
+#b2 .continuation-card { position:absolute; left:16px; right:16px; bottom:94px; z-index:24;
+  border:1px solid rgba(168,101,122,.18); border-radius:18px; padding:15px;
+  background:rgba(253,251,251,.96); box-shadow:var(--shadow-lift); backdrop-filter:blur(12px);
+  animation:guideFloat .4s ease both; }
+#b2 .continuation-card h4 { font-family:var(--serif); font-size:17px; }
+#b2 .continuation-card p { color:var(--ink-2); font-size:12px; line-height:1.65; margin-top:5px; }
+#b2 .continuation-actions { display:flex; align-items:center; gap:9px; margin-top:12px; }
+#b2 .continuation-actions .btn { padding:11px 14px; font-size:12.5px; }
+#b2 .continuation-actions .quiet { flex:none; border:none; background:none; color:var(--ink-2);
+  font:12px var(--sans); padding:9px 4px; cursor:pointer; }
 #b2 .loading-dots { display:flex; gap:6px; justify-content:center; }
 #b2 .loading-dots i { width:8px; height:8px; border-radius:50%; background:var(--rose); animation:ld 1s ease-in-out infinite; }
 #b2 .loading-dots i:nth-child(2) { animation-delay:.16s; }
@@ -564,9 +602,14 @@ body.pt-shot #b2 .tabbar, body.pt-shot #b3 .tabbar { padding-bottom:24px; }
 body.pt-shot #b2 .controls { padding-bottom:36px; }
 /* 走查引导(文字页进语音的提示 / 语音页的听完提示)不进作品集截图——真机无此提示，
    截图应是纯产品界面；语音钮的脉冲同理 */
-body.pt-shot #b2 .guide, body.pt-shot #b2 .call-tip { display:none; }
+body.pt-shot #b2 .guide, body.pt-shot #b2 .call-tip, body.pt-shot #b2 .continuation-card { display:none; }
 body.pt-shot #b2 .ib-round.pulse::after { display:none; }
 
+@media (prefers-reduced-motion: reduce) {
+  #b2 .tour-pulse-card, #b2 .tour-pulse-button, #b2 .backbtn.tour-pulse, #b2 .ib-round.pulse::after {
+    animation:none !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -582,7 +625,8 @@ body.pt-shot #b2 .ib-round.pulse::after { display:none; }
   <div class="pt-head">
     <div class="pt-eyebrow">VOWICE · PROTOTYPE</div>
     <h1>声契 Vowice 产品原型</h1>
-    <p class="pt-note">以下为设计阶段的可点击交互原型，因未接入后端，音色试听、语音通话等仅作交互演示，暂不播放实际音频；产品 MVP 已完成开发，上述功能已在 iOS 真机实现并跑通。批次①中设定的名字与称呼，会带入批次②③。</p>
+    <p class="pt-note">以下为设计阶段的可点击交互原型。因未接入后端，音色试听、语音通话等仅作交互演示，暂不播放实际音频。产品 MVP 已完成开发，上述功能已在 iOS 真机实现并跑通。</p>
+    <p class="pt-note-meta">批次①中设定的名字与称呼，会带入批次②③。</p>
     <div class="pt-tabs">
       <button class="pt-tab cur" data-k="b1">① 核心流程</button>
       <button class="pt-tab" data-k="b2">② 通话与记忆</button>
@@ -1812,7 +1856,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "walk"
     }, /*#__PURE__*/React.createElement("h3", null, "\u6279\u6B21\u2460 \u8D70\u67E5"), /*#__PURE__*/React.createElement("div", {
       className: "sub"
-    }, "CORE FLOW \xB7 v0.1"), SCREENS.map(s => /*#__PURE__*/React.createElement("button", {
+    }, "Core Flow"), SCREENS.map(s => /*#__PURE__*/React.createElement("button", {
       key: s.id,
       className: scr === s.id ? 'cur' : '',
       onClick: () => setScr(s.id)
@@ -2043,7 +2087,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       d: "M6 9l6 6 6-6",
       size: 13
     }), "\u70B9\u4E0B\u9762\u7684\u95EE\u5019\u5361\u56DE\u590D", vd.ta, "\uFF0C\u8FDB\u5165\u5BF9\u8BDD"), /*#__PURE__*/React.createElement("div", {
-      className: "today-card",
+      className: 'today-card' + (!tourDone ? ' tour-pulse-card' : ''),
       style: {
         cursor: 'pointer'
       },
@@ -2328,7 +2372,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     go,
     msgs,
     setMsgs,
-    voiceDone
+    voiceDone,
+    continuationMode,
+    onContinuationExit
   }) => {
     const vd = V();
     const [draft, setDraft] = useState('');
@@ -2377,6 +2423,13 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         text: '这张天色真好，是今天傍晚拍的吗？'
       }]), 900);
     };
+    const exitChat = () => {
+      if (continuationMode) {
+        onContinuationExit && onContinuationExit();
+        return;
+      }
+      go(voiceDone ? 'end' : 'home');
+    };
     return /*#__PURE__*/React.createElement("div", {
       className: "scr"
     }, /*#__PURE__*/React.createElement("div", {
@@ -2388,9 +2441,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         gap: 12
       }
     }, /*#__PURE__*/React.createElement("button", {
-      className: "backbtn",
-      onClick: () => go(voiceDone ? 'end' : 'home'),
-      "aria-label": voiceDone ? '返回并结束对话' : '返回主页'
+      className: 'backbtn' + (voiceDone || continuationMode ? ' tour-pulse' : ''),
+      onClick: exitChat,
+      "aria-label": continuationMode ? '退出推荐体验' : voiceDone ? '返回并结束对话' : '返回主页'
     }, /*#__PURE__*/React.createElement(Icon, {
       d: I.back,
       size: 18
@@ -2456,7 +2509,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }, /*#__PURE__*/React.createElement(Icon, {
       d: I.camera,
       size: 17
-    }), "\u62CD\u7167")), voiceDone ? /*#__PURE__*/React.createElement("div", {
+    }), "\u62CD\u7167")), continuationMode ? /*#__PURE__*/React.createElement("div", {
+      className: "guide guide-complete"
+    }, /*#__PURE__*/React.createElement("div", null, "\u63A8\u8350\u4F53\u9A8C\u5DF2\u5B8C\u6210\u3002TA \u4F1A\u5728\u540E\u7EED\u5BF9\u8BDD\u4E2D\uFF0C\u6839\u636E\u5F53\u524D\u8BED\u5883\u81EA\u7136\u60F3\u8D77\u4F60\u4FDD\u7559\u7684\u8BB0\u5FC6\u3002"), /*#__PURE__*/React.createElement("div", null, "\u4F60\u53EF\u4EE5\u9000\u51FA\u5F53\u524D\u5BF9\u8BDD\uFF0C\u7EE7\u7EED\u63A2\u7D22\u5176\u4ED6\u529F\u80FD\u3002")) : voiceDone ? /*#__PURE__*/React.createElement("div", {
       className: "guide"
     }, /*#__PURE__*/React.createElement(Icon, {
       d: I.back,
@@ -2469,7 +2524,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }), "\u60F3\u542C\u542C ", vd.ta, " \u7684\u58F0\u97F3\uFF1F\u70B9\u5DE6\u4E0B\u89D2\u8FDB\u5165\u8BED\u97F3\u901A\u8BDD"), /*#__PURE__*/React.createElement("div", {
       className: "input-bar"
     }, /*#__PURE__*/React.createElement("button", {
-      className: 'ib-round' + (voiceDone ? '' : ' pulse'),
+      className: 'ib-round' + (!voiceDone && !continuationMode ? ' pulse' : ''),
       onClick: () => go('voice'),
       "aria-label": "\u8BED\u97F3\u901A\u8BDD"
     }, /*#__PURE__*/React.createElement(Icon, {
@@ -2607,19 +2662,51 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   };
 
   /* ── S13 结束→记忆卡 ── */
+  const INITIAL_SESSION_MEMORIES = [{
+    id: 'a',
+    title: '桉树叶的香气',
+    content: '路过花店闻到桉树叶，站着闻了一会儿，想起了小时候。'
+  }, {
+    id: 'b',
+    title: '小时候与海的事',
+    content: '还没说完的童年往事，和一个没兑现的看海计划有关。'
+  }];
+  const MemoryGuide = () => /*#__PURE__*/React.createElement("div", {
+    className: "memory-guide"
+  }, /*#__PURE__*/React.createElement("p", null, "\u8FD9\u4E9B\u662F TA \u4ECE\u672C\u6B21\u5BF9\u8BDD\u4E2D\u6574\u7406\u51FA\u7684\u8BB0\u5FC6\u3002"), /*#__PURE__*/React.createElement("p", null, "\u9ED8\u8BA4\u4FDD\u7559\uFF0C\u4F60\u53EF\u4EE5\u4FEE\u6539\u6216\u5220\u9664\u3002"), /*#__PURE__*/React.createElement("p", null, "\u88AB\u5220\u9664\u7684\u5185\u5BB9\u4E0D\u4F1A\u8FDB\u5165\u56DE\u5FC6\uFF0CTA \u4E4B\u540E\u4E5F\u4E0D\u4F1A\u518D\u63D0\u8D77\u3002"));
   const EndCall = ({
     go,
     onFinish
   }) => {
     const [phase, setPhase] = useState('extract');
-    const [kept, setKept] = useState({
-      a: true,
-      b: true
-    });
+    const [cards, setCards] = useState(INITIAL_SESSION_MEMORIES);
+    const [deleted, setDeleted] = useState(() => new Set());
+    const [editing, setEditing] = useState(null);
+    const [draft, setDraft] = useState('');
     useEffect(() => {
-      const t = setTimeout(() => setPhase('cards'), 1700);
+      if (phase === 'cards') return;
+      const t = setTimeout(() => setPhase(p => p === 'extract' ? 'intro' : 'cards'), phase === 'extract' ? 1700 : 1350);
       return () => clearTimeout(t);
-    }, []);
+    }, [phase]);
+    const startEdit = card => {
+      setEditing(card.id);
+      setDraft(card.content);
+    };
+    const saveEdit = id => {
+      const next = draft.trim();
+      if (!next) return;
+      setCards(items => items.map(item => item.id === id ? {
+        ...item,
+        content: next
+      } : item));
+      setEditing(null);
+    };
+    const toggleDelete = id => setDeleted(prev => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      if (next.has(id) && editing === id) setEditing(null);
+      return next;
+    });
     if (phase === 'extract') return /*#__PURE__*/React.createElement("div", {
       className: "scr"
     }, /*#__PURE__*/React.createElement("div", {
@@ -2647,62 +2734,86 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         marginTop: 8
       }
     }, "\u503C\u5F97\u8BB0\u4F4F\u7684\u77AC\u95F4\uFF0C\u4F1A\u53D8\u6210\u8BB0\u5FC6\u5361")));
+    if (phase === 'intro') return /*#__PURE__*/React.createElement("div", {
+      className: "scr"
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'center',
+        textAlign: 'center'
+      },
+      className: "pad"
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontFamily: 'var(--mono)',
+        fontSize: 11,
+        letterSpacing: '.18em',
+        color: 'var(--ink-2)'
+      }
+    }, "CALL ENDED \xB7 12:36"), /*#__PURE__*/React.createElement("div", {
+      className: "h-serif",
+      style: {
+        fontSize: 22,
+        marginTop: 12
+      }
+    }, "\u8FD9\u6B21\u5BF9\u8BDD\uFF0C\u7559\u4E0B\u4E86 2 \u6BB5\u8BB0\u5FC6"), /*#__PURE__*/React.createElement(MemoryGuide, null)));
+    const keptCards = cards.filter(card => !deleted.has(card.id));
     return /*#__PURE__*/React.createElement("div", {
       className: "scr"
     }, /*#__PURE__*/React.createElement("div", {
       className: "end-sum"
     }, /*#__PURE__*/React.createElement("div", {
       className: "es-time"
-    }, "CALL ENDED \xB7 12:36"), /*#__PURE__*/React.createElement("h2", null, "\u8FD9\u6B21\u5BF9\u8BDD\uFF0C\u7559\u4E0B\u4E86 2 \u6BB5\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("p", {
-      className: "hint",
-      style: {
-        marginTop: 6
-      }
-    }, "\u4E0D\u60F3\u7559\u7684\u53EF\u4EE5\u73B0\u5728\u5220\u6389\uFF0C\u4E4B\u540E\u4E5F\u80FD\u5728\u300C\u56DE\u5FC6\u300D\u91CC\u7BA1\u7406\u3002", /*#__PURE__*/React.createElement("br", null), "\u5220\u9664\u540E TA \u4E0D\u4F1A\u518D\u63D0\u8D77\u3002")), /*#__PURE__*/React.createElement("div", {
-      className: "pad",
-      style: {
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 14,
-        marginTop: 14
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      className: 'mem-card' + (kept.a ? '' : ' off')
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "mc-date"
-    }, "2026-07-09 \xB7 \u901A\u8BDD\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("h4", null, "\u6849\u6811\u53F6\u7684\u9999\u6C14"), /*#__PURE__*/React.createElement("p", null, "\u8DEF\u8FC7\u82B1\u5E97\u95FB\u5230\u6849\u6811\u53F6\uFF0C\u7AD9\u7740\u95FB\u4E86\u4E00\u4F1A\u513F\uFF0C\u60F3\u8D77\u4E86\u5C0F\u65F6\u5019\u3002"), /*#__PURE__*/React.createElement("button", {
-      className: "keep",
-      onClick: () => setKept(k => ({
-        ...k,
-        a: !k.a
-      }))
-    }, kept.a ? '留下' : '已删除')), /*#__PURE__*/React.createElement("div", {
-      className: 'mem-card' + (kept.b ? '' : ' off')
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "mc-date"
-    }, "2026-07-09 \xB7 \u901A\u8BDD\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("h4", null, "\u5C0F\u65F6\u5019\u4E0E\u6D77\u7684\u4E8B"), /*#__PURE__*/React.createElement("p", null, "\u8FD8\u6CA1\u8BF4\u5B8C\u7684\u7AE5\u5E74\u5F80\u4E8B\uFF0C\u548C\u4E00\u4E2A\u6CA1\u5151\u73B0\u7684\u770B\u6D77\u8BA1\u5212\u6709\u5173\u3002"), /*#__PURE__*/React.createElement("button", {
-      className: "keep",
-      onClick: () => setKept(k => ({
-        ...k,
-        b: !k.b
-      }))
-    }, kept.b ? '留下' : '已删除'))), /*#__PURE__*/React.createElement("div", {
-      style: {
-        marginTop: 'auto',
-        padding: '0 24px 36px'
-      }
+    }, "CALL ENDED \xB7 12:36"), /*#__PURE__*/React.createElement("h2", null, "\u8FD9\u6B21\u5BF9\u8BDD\uFF0C\u7559\u4E0B\u4E86 2 \u6BB5\u8BB0\u5FC6"), /*#__PURE__*/React.createElement(MemoryGuide, null)), /*#__PURE__*/React.createElement("div", {
+      className: "memory-card-list"
+    }, cards.map((card, index) => {
+      const off = deleted.has(card.id);
+      return /*#__PURE__*/React.createElement("div", {
+        key: card.id,
+        className: 'mem-card' + (off ? ' off' : ''),
+        style: {
+          animation: 'guideFloat .35s ease both',
+          animationDelay: index * .1 + 's'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        className: "mc-date"
+      }, "2026-07-09 \xB7 \u901A\u8BDD\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("h4", null, card.title), editing === card.id ? /*#__PURE__*/React.createElement("textarea", {
+        className: "memory-editor",
+        value: draft,
+        maxLength: 100,
+        onChange: e => setDraft(e.target.value),
+        "aria-label": '修改' + card.title
+      }) : /*#__PURE__*/React.createElement("p", null, card.content), /*#__PURE__*/React.createElement("div", {
+        className: "memory-actions"
+      }, !off && /*#__PURE__*/React.createElement("button", {
+        onClick: () => editing === card.id ? saveEdit(card.id) : startEdit(card)
+      }, editing === card.id ? '保存' : '修改'), /*#__PURE__*/React.createElement("button", {
+        className: off ? '' : 'warn',
+        onClick: () => toggleDelete(card.id)
+      }, off ? '恢复' : '删除')));
+    })), /*#__PURE__*/React.createElement("div", {
+      className: "end-action"
     }, /*#__PURE__*/React.createElement("button", {
-      className: "btn btn-primary",
+      className: 'btn btn-primary' + (keptCards.length ? ' tour-pulse-button' : ''),
       onClick: () => {
-        onFinish && onFinish();
+        onFinish && onFinish(keptCards);
         go('moments');
       }
-    }, "\u6536\u8FDB\u56DE\u5FC6")));
+    }, keptCards.length ? '收进回忆' : '不保留本次记忆')));
   };
 
   /* ── S14 回忆·回声日记 ── */
-  const Moments = () => {
+  const Moments = ({
+    latestMemories,
+    showContinuation,
+    onContinue,
+    onDismiss
+  }) => {
     const vd = V();
+    const todayMemories = latestMemories == null ? INITIAL_SESSION_MEMORIES : latestMemories;
+    const total = 10 + todayMemories.length;
     return /*#__PURE__*/React.createElement("div", {
       className: "scr"
     }, /*#__PURE__*/React.createElement("div", {
@@ -2711,7 +2822,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "th-title"
     }, "\u56DE\u5FC6"), /*#__PURE__*/React.createElement("div", {
       className: "th-count"
-    }, "ECHO DIARY \xB7 12 MOMENTS")), /*#__PURE__*/React.createElement("button", {
+    }, "ECHO DIARY \xB7 ", total, " MOMENTS")), /*#__PURE__*/React.createElement("button", {
       style: {
         border: 'none',
         background: 'var(--surface)',
@@ -2732,7 +2843,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       size: 19
     }))), /*#__PURE__*/React.createElement("div", {
       className: "timeline"
-    }, /*#__PURE__*/React.createElement("div", {
+    }, todayMemories.length > 0 && /*#__PURE__*/React.createElement("div", {
       className: "tl-group"
     }, /*#__PURE__*/React.createElement("div", {
       className: "tl-dot"
@@ -2740,15 +2851,12 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "tl-date"
     }, "\u4ECA\u5929 \xB7 07-09"), /*#__PURE__*/React.createElement("div", {
       className: "tl-cards"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "mem-card"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "mc-date"
-    }, "\u901A\u8BDD\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("h4", null, "\u6849\u6811\u53F6\u7684\u9999\u6C14"), /*#__PURE__*/React.createElement("p", null, "\u8DEF\u8FC7\u82B1\u5E97\u95FB\u5230\u6849\u6811\u53F6\uFF0C\u7AD9\u7740\u95FB\u4E86\u4E00\u4F1A\u513F\uFF0C\u60F3\u8D77\u4E86\u5C0F\u65F6\u5019\u3002")), /*#__PURE__*/React.createElement("div", {
-      className: "mem-card"
+    }, todayMemories.map(memory => /*#__PURE__*/React.createElement("div", {
+      className: "mem-card",
+      key: memory.id
     }, /*#__PURE__*/React.createElement("div", {
       className: "mc-date"
-    }, "\u901A\u8BDD\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("h4", null, "\u5C0F\u65F6\u5019\u4E0E\u6D77\u7684\u4E8B"), /*#__PURE__*/React.createElement("p", null, "\u8FD8\u6CA1\u8BF4\u5B8C\u7684\u7AE5\u5E74\u5F80\u4E8B\uFF0C\u548C\u4E00\u4E2A\u6CA1\u5151\u73B0\u7684\u770B\u6D77\u8BA1\u5212\u6709\u5173\u3002")))), /*#__PURE__*/React.createElement("div", {
+    }, "\u901A\u8BDD\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("h4", null, memory.title), /*#__PURE__*/React.createElement("p", null, memory.content))))), /*#__PURE__*/React.createElement("div", {
       className: "tl-group"
     }, /*#__PURE__*/React.createElement("div", {
       className: "tl-dot"
@@ -2803,7 +2911,20 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       }
     }, /*#__PURE__*/React.createElement(Seal, {
       size: 26
-    })))))));
+    })))))), showContinuation && /*#__PURE__*/React.createElement("div", {
+      className: "continuation-card"
+    }, /*#__PURE__*/React.createElement("h4", null, todayMemories.length ? '记忆已经收进回忆' : '本次没有保留记忆'), /*#__PURE__*/React.createElement("p", null, todayMemories.length ? '在之后的普通对话里，TA 会根据语境自然想起，而不需要通过特定入口。' : '被删除的内容不会进入回忆，TA 之后也不会再提起。'), /*#__PURE__*/React.createElement("div", {
+      className: "continuation-actions"
+    }, todayMemories.length ? /*#__PURE__*/React.createElement("button", {
+      className: "btn btn-primary tour-pulse-button",
+      onClick: onContinue
+    }, "\u770B\u770B\u8BB0\u5FC6\u5982\u4F55\u5EF6\u7EED") : /*#__PURE__*/React.createElement("button", {
+      className: "btn btn-primary",
+      onClick: onDismiss
+    }, "\u7EE7\u7EED\u81EA\u7531\u63A2\u7D22"), todayMemories.length > 0 && /*#__PURE__*/React.createElement("button", {
+      className: "quiet",
+      onClick: onDismiss
+    }, "\u81EA\u7531\u63A2\u7D22"))));
   };
 
   /* ── App ── */
@@ -2854,6 +2975,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }] : initScreen === 'text' ? CHAT_SEED : null);
     const setChatMsgs = updater => setChat(prev => updater(prev || CHAT_SEED));
     const [voiceDone, setVoiceDone] = useState(false); // 是否完整听完过一次语音通话(决定文字页返回是否走记忆卡收尾)
+    const [latestMemories, setLatestMemories] = useState(null);
+    const [showContinuation, setShowContinuation] = useState(false);
+    const [continuationMode, setContinuationMode] = useState(false);
     /* 挂断语音:把这段语音的转写(我说的/TA 说的)并入文字页的同一条会话,系统提示由 go() 追加在其后 */
     const carryVoice = vmsgs => setChat(prev => [...(prev || CHAT_SEED), ...(vmsgs || []).filter(m => m.who === 'ai' || m.who === 'me')]);
     /* 首次引导是否已走完(记忆卡收进回忆即算)——写入 VDATA,刷新/切批次不复活,重置数据后恢复 */
@@ -2864,6 +2988,33 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       });
       setTourDone(true);
     };
+    const finishMemoryFlow = kept => {
+      finishTour();
+      setLatestMemories(kept);
+      setShowContinuation(true);
+    };
+    const dismissContinuation = () => setShowContinuation(false);
+    const startContinuation = () => {
+      const memory = latestMemories && latestMemories[0];
+      if (!memory) return;
+      const recalled = memory.content.replace(/[。！？!?]+$/, '');
+      setShowContinuation(false);
+      setVoiceDone(false);
+      setContinuationMode(true);
+      setChat([{
+        who: 'ai',
+        mem: true,
+        text: `我还记得你说过[mem]${recalled}[/mem]。如果愿意，就从你记得最清楚的地方继续讲吧。`
+      }]);
+      setScr('text');
+    };
+    const finishContinuation = () => {
+      window.VDATA.save({
+        continuationTourDone: true
+      });
+      setContinuationMode(false);
+      setScr('home');
+    };
     const toast = t => {
       setToastMsg(t);
       setTimeout(() => setToastMsg(null), 2000);
@@ -2871,6 +3022,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     /* note=挂断语音后的系统提示;open=问候卡/话题卡带入的 TA 开场白(会话未开始则以它开场) */
     const go = (s, note, open) => {
       setDemo(null);
+      if (s !== 'text') setContinuationMode(false);
       if (s === 'text') setChat(prev => {
         let next = prev ? open ? [...prev, {
           who: 'ai',
@@ -2905,23 +3057,30 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         go: go,
         msgs: chat || CHAT_SEED,
         setMsgs: setChatMsgs,
-        voiceDone: voiceDone
+        voiceDone: voiceDone,
+        continuationMode: continuationMode,
+        onContinuationExit: finishContinuation
       }),
       redo: /*#__PURE__*/React.createElement(Redo, {
         go: go
       }),
       end: /*#__PURE__*/React.createElement(EndCall, {
         go: go,
-        onFinish: finishTour,
+        onFinish: finishMemoryFlow,
         key: "end"
       }),
-      moments: /*#__PURE__*/React.createElement(Moments, null)
+      moments: /*#__PURE__*/React.createElement(Moments, {
+        latestMemories: latestMemories,
+        showContinuation: showContinuation,
+        onContinue: startContinuation,
+        onDismiss: dismissContinuation
+      })
     }[scr];
     return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
       className: "walk"
     }, /*#__PURE__*/React.createElement("h3", null, "\u6279\u6B21\u2461 \u8D70\u67E5"), /*#__PURE__*/React.createElement("div", {
       className: "sub"
-    }, "CALL & MEMORY \xB7 v0.1 \xB7 07-16 \u4FEE\u8BA2"), SCREENS.map(s => /*#__PURE__*/React.createElement("button", {
+    }, "Call & Memory"), SCREENS.map(s => /*#__PURE__*/React.createElement("button", {
       key: s.id,
       className: scr === s.id ? 'cur' : '',
       onClick: () => go(s.id)
@@ -3760,7 +3919,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "walk"
     }, /*#__PURE__*/React.createElement("h3", null, "\u6279\u6B21\u2462 \u8D70\u67E5"), /*#__PURE__*/React.createElement("div", {
       className: "sub"
-    }, "DAILY & SETTINGS \xB7 v0.1"), SCREENS.map(s => /*#__PURE__*/React.createElement("button", {
+    }, "Daily & Settings"), SCREENS.map(s => /*#__PURE__*/React.createElement("button", {
       key: s.id,
       className: scr === s.id ? 'cur' : '',
       onClick: () => go(s.id)
