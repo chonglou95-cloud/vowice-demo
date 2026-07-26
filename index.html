@@ -342,7 +342,6 @@ body { margin:0; background:#EDEAE4; }
   border-radius:14px; padding:8px 12px; animation:fadein .3s ease; }
 #b2 .guide svg { flex:none; }
 #b2 .guide.guide-complete { align-items:flex-start; flex-direction:column; gap:3px; padding:10px 12px; }
-#b2 .guide.guide-complete div:first-child { font-weight:600; }
 #b2 .attach-pop { position:absolute; right:14px; bottom:96px; background:#FDFBFB; border-radius:16px;
   box-shadow:var(--shadow-lift); padding:8px; display:flex; flex-direction:column; gap:2px; z-index:30; animation:fadein .15s ease; }
 #b2 .attach-pop button { display:flex; align-items:center; gap:10px; border:none; background:none; cursor:pointer;
@@ -355,9 +354,6 @@ body { margin:0; background:#EDEAE4; }
 #b2 .end-sum { text-align:center; padding:26px 24px 6px; }
 #b2 .end-sum .es-time { font-family:var(--mono); font-size:11px; letter-spacing:.18em; text-indent:.18em; color:var(--ink-2); }
 #b2 .end-sum h2 { font-family:var(--serif); font-size:24px; margin-top:10px; }
-#b2 .memory-guide { margin:14px auto 0; max-width:310px; color:var(--ink-2); font-size:12px;
-  line-height:1.72; animation:guideFloat .45s ease both; }
-#b2 .memory-guide p + p { margin-top:2px; }
 #b2 .memory-card-list { flex:1; min-height:0; overflow-y:auto; display:flex; flex-direction:column; gap:14px;
   margin-top:12px; padding:2px 24px 18px; scrollbar-width:none; }
 #b2 .memory-card-list::-webkit-scrollbar { display:none; }
@@ -368,13 +364,6 @@ body { margin:0; background:#EDEAE4; }
 #b2 .mem-card p { font-size:13px; color:var(--ink-2); line-height:1.7; }
 #b2 .mem-card .keep { position:absolute; top:14px; right:14px; border:none; background:var(--rose-soft);
   color:var(--rose-deep); font-size:11px; border-radius:14px; padding:5px 12px; cursor:pointer; font-family:var(--sans); }
-#b2 .memory-actions { display:flex; justify-content:flex-end; gap:8px; margin-top:12px; }
-#b2 .memory-actions button { border:none; border-radius:14px; padding:6px 12px; cursor:pointer; font-family:var(--sans);
-  font-size:11px; color:var(--rose-deep); background:var(--rose-soft); }
-#b2 .memory-actions button.warn { color:#A84A3A; background:rgba(168,74,58,.09); }
-#b2 .memory-editor { width:100%; min-height:66px; resize:vertical; border:1px solid rgba(168,101,122,.26);
-  background:#FFF; color:var(--ink); border-radius:12px; padding:10px 11px; outline:none;
-  font:13px/1.65 var(--sans); }
 #b2 .end-action { flex:none; padding:8px 24px 36px; }
 #b2 .continuation-card { position:absolute; left:16px; right:16px; bottom:94px; z-index:24;
   border:1px solid rgba(168,101,122,.18); border-radius:18px; padding:15px;
@@ -968,6 +957,37 @@ window.VDATA = {
   read(){ try { return JSON.parse(localStorage.getItem(this.KEY) || '{}') || {}; } catch(e){ return {}; } },
   save(patch){ try { localStorage.setItem(this.KEY, JSON.stringify(Object.assign(this.read(), patch))); } catch(e){} },
   clear(){ try { localStorage.removeItem(this.KEY); } catch(e){} }
+};
+/* ── 记忆真源（批次②③ 共享 · 在线版差异）──
+   单文件原型里各批次是独立文件、状态互不相通，在线版把记忆收敛到这一份：
+   S13 点「收进回忆」时，把删掉的 id 写进 VDATA.deletedMems；
+   S14 回忆页 / S15 记忆管理 / 主页「最近的记忆」/ S16 话题卡 一律据此过滤，
+   条数（ECHO DIARY · N MOMENTS、设置页「记忆管理 N 条」）也由它派生，保证不会出现
+   「删掉的记忆在别处又冒出来」或「数字对不上」。抽屉「重置数据」清空 VDATA 即全部恢复。
+   session:true = 本次通话刚产生的两条（S13 展示的就是它们）。 */
+window.VMEM = {
+  ALL: [
+    { id:1, date:'07-09', full:'2026-07-09', group:'今天 · 07-09', session:true, title:'桉树叶的香气',   body:'路过花店闻到桉树叶，站着闻了一会儿，想起了小时候。' },
+    { id:2, date:'07-09', full:'2026-07-09', group:'今天 · 07-09', session:true, title:'小时候与海的事', body:'还没说完的童年往事，和一个没兑现的看海计划有关。' },
+    { id:3, date:'07-02', full:'2026-07-02', group:'07-02',                      title:'想去看一次海',   body:'工作忙到忘了季节，想找个不下雨的周末去海边，听一下午海浪。' },
+    { id:4, date:'06-28', full:'2026-06-28', group:'06-28',                      title:'加班后的那碗面', body:'十一点下班，楼下面馆只剩最后一碗，觉得被世界温柔了一下。' }
+  ],
+  deleted(){ return new Set(window.VDATA.read().deletedMems || []); },
+  /* S15 记忆管理里的「修改」也落到这里,改完在回忆页/主页看到的是同一份文本 */
+  edits(){ return window.VDATA.read().memEdits || {}; },
+  apply(list){ const e = this.edits();
+    return list.map(function(m){ return e[m.id] ? Object.assign({}, m, { body:e[m.id] }) : m; }); },
+  session(){ return this.apply(this.ALL.filter(function(m){ return m.session; })); },
+  kept(){ const d = this.deleted();
+    return this.apply(this.ALL.filter(function(m){ return !d.has(m.id); })); },
+  edit(id, body){ const e = this.edits(); e[id] = body; window.VDATA.save({ memEdits:e }); },
+  write(set){ window.VDATA.save({ deletedMems: Array.from(set) }); },
+  /* 进入 S13 = 一次新通话刚结束,本次这两条先恢复成全新状态,重复走查每次都从干净的两张卡开始 */
+  resetSession(){ const d = this.deleted(); this.session().forEach(function(m){ d.delete(m.id); }); this.write(d); },
+  /* 收进回忆:把这次删掉的并入全局删除集,后续各屏都不再出现 */
+  commit(ids){ const d = this.deleted(); (ids || []).forEach(function(i){ d.add(i); }); this.write(d); },
+  /* S15 记忆管理里的删除(二次确认后,不可恢复) */
+  remove(id){ const d = this.deleted(); d.add(id); this.write(d); }
 };
 </script>
 <script>
@@ -1888,7 +1908,10 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 /* ═══ 批次② 通话与记忆 · 源自 03_原型设计/Vowice_原型_批次2_通话与记忆_v0.1.html
    在线版差异：① TA/称呼/身份从 VDATA 读取（批次①设定带入，缺省沈屿/小满）
    ② Tab 栏「日常/更多」与来信条、记忆管理入口 → 页内跳批次③（原为 toast 占位）
-   ③ 走查侧栏批次链接 → 页内切换（修 404） ④ 支持 initScreen/initDemo/opener/emptyMode ═══ */
+   ③ 走查侧栏批次链接 → 页内切换（修 404） ④ 支持 initScreen/initDemo/opener/emptyMode
+   ⑤ 记忆收敛到共享真源 window.VMEM（见 template.html）：S13 删掉的记忆写入 VDATA.deletedMems，
+     主页「最近的记忆」/S14 回忆页/批次③记忆管理与话题卡一律据此过滤，条数也由它派生
+     （单文件原型里各批次状态互不相通，做不到这一层） ═══ */
 (function () {
   const {
     useState,
@@ -2034,10 +2057,23 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 
   /* ── S8 主页 ── */
   const GREETING = '今天风大，把想说的话都吹到我这边来吧。';
+  /* 「最近的记忆」:每个日期只露最新一条,三条要看得出时间跨度(而不是同一天挤三条) */
+  const recentThree = list => {
+    const seen = new Set(),
+      out = [];
+    list.forEach(m => {
+      if (!seen.has(m.date) && out.length < 3) {
+        seen.add(m.date);
+        out.push(m);
+      }
+    });
+    return out;
+  };
   const Home = ({
     go,
     emptyMode,
-    tourDone
+    tourDone,
+    memKept
   }) => {
     const vd = V();
     return /*#__PURE__*/React.createElement("div", {
@@ -2114,19 +2150,12 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "sec-label"
     }, "\u6700\u8FD1\u7684\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("div", {
       className: "mem-strip"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "mem-mini"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "mm-date"
-    }, "07-09"), /*#__PURE__*/React.createElement("b", null, "\u6849\u6811\u53F6\u7684\u9999\u6C14")), /*#__PURE__*/React.createElement("div", {
-      className: "mem-mini"
+    }, recentThree(memKept).map(m => /*#__PURE__*/React.createElement("div", {
+      className: "mem-mini",
+      key: m.id
     }, /*#__PURE__*/React.createElement("div", {
       className: "mm-date"
-    }, "07-02"), /*#__PURE__*/React.createElement("b", null, "\u60F3\u53BB\u770B\u4E00\u6B21\u6D77")), /*#__PURE__*/React.createElement("div", {
-      className: "mem-mini"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "mm-date"
-    }, "06-28"), /*#__PURE__*/React.createElement("b", null, "\u52A0\u73ED\u540E\u7684\u90A3\u7897\u9762")), /*#__PURE__*/React.createElement("div", {
+    }, m.date), /*#__PURE__*/React.createElement("b", null, m.title))), /*#__PURE__*/React.createElement("div", {
       className: "mem-mini",
       style: {
         background: 'linear-gradient(150deg,rgba(245,235,237,.95),rgba(255,255,255,.92))',
@@ -2134,7 +2163,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       }
     }, /*#__PURE__*/React.createElement("div", {
       className: "mm-date"
-    }, "02-10 \xB7 DAY 1"), /*#__PURE__*/React.createElement("b", null, "\u6211\u4EEC\u7684\u58F0\u5951"))), /*#__PURE__*/React.createElement("div", {
+    }, "03-14 \xB7 DAY 1"), /*#__PURE__*/React.createElement("b", null, "\u6211\u4EEC\u7684\u58F0\u5951"))), /*#__PURE__*/React.createElement("div", {
       className: "sec-label"
     }, "\u6765\u4FE1"), /*#__PURE__*/React.createElement("div", {
       className: "letter-bar",
@@ -2511,7 +2540,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       size: 17
     }), "\u62CD\u7167")), continuationMode ? /*#__PURE__*/React.createElement("div", {
       className: "guide guide-complete"
-    }, /*#__PURE__*/React.createElement("div", null, "\u63A8\u8350\u4F53\u9A8C\u5DF2\u5B8C\u6210\u3002TA \u4F1A\u5728\u540E\u7EED\u5BF9\u8BDD\u4E2D\uFF0C\u6839\u636E\u5F53\u524D\u8BED\u5883\u81EA\u7136\u60F3\u8D77\u4F60\u4FDD\u7559\u7684\u8BB0\u5FC6\u3002"), /*#__PURE__*/React.createElement("div", null, "\u4F60\u53EF\u4EE5\u9000\u51FA\u5F53\u524D\u5BF9\u8BDD\uFF0C\u7EE7\u7EED\u63A2\u7D22\u5176\u4ED6\u529F\u80FD\u3002")) : voiceDone ? /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", null, "\u63A8\u8350\u4F53\u9A8C\u5DF2\u5B8C\u6210\u3002"), /*#__PURE__*/React.createElement("div", null, "TA \u4F1A\u5728\u540E\u7EED\u5BF9\u8BDD\u4E2D\uFF0C\u6839\u636E\u5F53\u524D\u8BED\u5883\u81EA\u7136\u60F3\u8D77\u4F60\u4FDD\u7559\u7684\u8BB0\u5FC6\u3002"), /*#__PURE__*/React.createElement("div", null, "\u4F60\u53EF\u4EE5\u9000\u51FA\u5F53\u524D\u5BF9\u8BDD\uFF0C\u7EE7\u7EED\u63A2\u7D22\u5176\u4ED6\u529F\u80FD\u3002")) : voiceDone ? /*#__PURE__*/React.createElement("div", {
       className: "guide"
     }, /*#__PURE__*/React.createElement(Icon, {
       d: I.back,
@@ -2662,49 +2691,26 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   };
 
   /* ── S13 结束→记忆卡 ── */
-  const INITIAL_SESSION_MEMORIES = [{
-    id: 'a',
-    title: '桉树叶的香气',
-    content: '路过花店闻到桉树叶，站着闻了一会儿，想起了小时候。'
-  }, {
-    id: 'b',
-    title: '小时候与海的事',
-    content: '还没说完的童年往事，和一个没兑现的看海计划有关。'
-  }];
-  const MemoryGuide = () => /*#__PURE__*/React.createElement("div", {
-    className: "memory-guide"
-  }, /*#__PURE__*/React.createElement("p", null, "\u8FD9\u4E9B\u662F TA \u4ECE\u672C\u6B21\u5BF9\u8BDD\u4E2D\u6574\u7406\u51FA\u7684\u8BB0\u5FC6\u3002"), /*#__PURE__*/React.createElement("p", null, "\u9ED8\u8BA4\u4FDD\u7559\uFF0C\u4F60\u53EF\u4EE5\u4FEE\u6539\u6216\u5220\u9664\u3002"), /*#__PURE__*/React.createElement("p", null, "\u88AB\u5220\u9664\u7684\u5185\u5BB9\u4E0D\u4F1A\u8FDB\u5165\u56DE\u5FC6\uFF0CTA \u4E4B\u540E\u4E5F\u4E0D\u4F1A\u518D\u63D0\u8D77\u3002"));
+  /* 删除在「收进回忆」之前都是草稿态(点一下即恢复);进了回忆之后才不可逆——那一层在 S15 记忆管理(二次确认) */
   const EndCall = ({
     go,
-    onFinish
+    onFinish,
+    guideSeen
   }) => {
     const [phase, setPhase] = useState('extract');
-    const [cards, setCards] = useState(INITIAL_SESSION_MEMORIES);
     const [deleted, setDeleted] = useState(() => new Set());
-    const [editing, setEditing] = useState(null);
-    const [draft, setDraft] = useState('');
+    /* 挂载=一次新通话刚结束:先把本次两条从全局删除集里恢复,重复走查每次都从干净的两张卡开始 */
+    const [cards] = useState(() => {
+      window.VMEM.resetSession();
+      return window.VMEM.session();
+    });
     useEffect(() => {
-      if (phase === 'cards') return;
-      const t = setTimeout(() => setPhase(p => p === 'extract' ? 'intro' : 'cards'), phase === 'extract' ? 1700 : 1350);
+      const t = setTimeout(() => setPhase('cards'), 1700);
       return () => clearTimeout(t);
-    }, [phase]);
-    const startEdit = card => {
-      setEditing(card.id);
-      setDraft(card.content);
-    };
-    const saveEdit = id => {
-      const next = draft.trim();
-      if (!next) return;
-      setCards(items => items.map(item => item.id === id ? {
-        ...item,
-        content: next
-      } : item));
-      setEditing(null);
-    };
+    }, []);
     const toggleDelete = id => setDeleted(prev => {
       const next = new Set(prev);
       next.has(id) ? next.delete(id) : next.add(id);
-      if (next.has(id) && editing === id) setEditing(null);
       return next;
     });
     if (phase === 'extract') return /*#__PURE__*/React.createElement("div", {
@@ -2734,39 +2740,18 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         marginTop: 8
       }
     }, "\u503C\u5F97\u8BB0\u4F4F\u7684\u77AC\u95F4\uFF0C\u4F1A\u53D8\u6210\u8BB0\u5FC6\u5361")));
-    if (phase === 'intro') return /*#__PURE__*/React.createElement("div", {
-      className: "scr"
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        flex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'center',
-        textAlign: 'center'
-      },
-      className: "pad"
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontFamily: 'var(--mono)',
-        fontSize: 11,
-        letterSpacing: '.18em',
-        color: 'var(--ink-2)'
-      }
-    }, "CALL ENDED \xB7 12:36"), /*#__PURE__*/React.createElement("div", {
-      className: "h-serif",
-      style: {
-        fontSize: 22,
-        marginTop: 12
-      }
-    }, "\u8FD9\u6B21\u5BF9\u8BDD\uFF0C\u7559\u4E0B\u4E86 2 \u6BB5\u8BB0\u5FC6")));
     const keptCards = cards.filter(card => !deleted.has(card.id));
+    /* 分层浮现:标题 → 卡片(依次) → 引导,同一条时间线,取代原先独占一屏的中间页 */
     return /*#__PURE__*/React.createElement("div", {
       className: "scr"
     }, /*#__PURE__*/React.createElement("div", {
-      className: "end-sum"
+      className: "end-sum",
+      style: {
+        animation: 'guideFloat .4s ease both'
+      }
     }, /*#__PURE__*/React.createElement("div", {
       className: "es-time"
-    }, "CALL ENDED \xB7 12:36"), /*#__PURE__*/React.createElement("h2", null, "\u8FD9\u6B21\u5BF9\u8BDD\uFF0C\u7559\u4E0B\u4E86 2 \u6BB5\u8BB0\u5FC6"), /*#__PURE__*/React.createElement(MemoryGuide, null)), /*#__PURE__*/React.createElement("div", {
+    }, "CALL ENDED \xB7 21:45"), /*#__PURE__*/React.createElement("h2", null, keptCards.length ? `这次对话，留下了 ${keptCards.length} 段记忆` : '这次对话，先记在心里')), /*#__PURE__*/React.createElement("div", {
       className: "memory-card-list"
     }, cards.map((card, index) => {
       const off = deleted.has(card.id);
@@ -2774,31 +2759,28 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
         key: card.id,
         className: 'mem-card' + (off ? ' off' : ''),
         style: {
-          animation: 'guideFloat .35s ease both',
-          animationDelay: index * .1 + 's'
+          animation: 'guideFloat .4s ease both',
+          animationDelay: .12 + index * .1 + 's'
         }
       }, /*#__PURE__*/React.createElement("div", {
         className: "mc-date"
-      }, "2026-07-09 \xB7 \u901A\u8BDD\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("h4", null, card.title), editing === card.id ? /*#__PURE__*/React.createElement("textarea", {
-        className: "memory-editor",
-        value: draft,
-        maxLength: 100,
-        onChange: e => setDraft(e.target.value),
-        "aria-label": '修改' + card.title
-      }) : /*#__PURE__*/React.createElement("p", null, card.content), /*#__PURE__*/React.createElement("div", {
-        className: "memory-actions"
-      }, !off && /*#__PURE__*/React.createElement("button", {
-        onClick: () => editing === card.id ? saveEdit(card.id) : startEdit(card)
-      }, editing === card.id ? '保存' : '修改'), /*#__PURE__*/React.createElement("button", {
-        className: off ? '' : 'warn',
+      }, "2026-07-09 \xB7 \u901A\u8BDD\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("h4", null, card.title), /*#__PURE__*/React.createElement("p", null, card.body), /*#__PURE__*/React.createElement("button", {
+        className: "keep",
         onClick: () => toggleDelete(card.id)
-      }, off ? '恢复' : '删除')));
-    })), /*#__PURE__*/React.createElement("div", {
+      }, off ? '已删除' : '留下'));
+    }), !guideSeen && /*#__PURE__*/React.createElement("div", {
+      className: "guide guide-complete",
+      style: {
+        margin: '2px 0 0',
+        animation: 'guideFloat .4s ease both',
+        animationDelay: .12 + cards.length * .1 + .2 + 's'
+      }
+    }, /*#__PURE__*/React.createElement("div", null, "\u8BB0\u5FC6\u9ED8\u8BA4\u7559\u4E0B\uFF0C\u53EF\u5220\u9664\uFF0C\u5220\u9664\u540E TA \u5C06\u4E0D\u4F1A\u518D\u63D0\u8D77\u3002"), /*#__PURE__*/React.createElement("div", null, "\u672A\u6765\u53EF\u5728\u300C\u56DE\u5FC6\u300D\u91CC\u7BA1\u7406\u8BB0\u5FC6\u3002"))), /*#__PURE__*/React.createElement("div", {
       className: "end-action"
     }, /*#__PURE__*/React.createElement("button", {
       className: 'btn btn-primary' + (keptCards.length ? ' tour-pulse-button' : ''),
       onClick: () => {
-        onFinish && onFinish(keptCards);
+        onFinish(cards.filter(c => deleted.has(c.id)).map(c => c.id), keptCards);
         go('moments');
       }
     }, keptCards.length ? '收进回忆' : '不保留本次记忆')));
@@ -2806,14 +2788,22 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 
   /* ── S14 回忆·回声日记 ── */
   const Moments = ({
-    latestMemories,
+    memKept,
     showContinuation,
     onContinue,
     onDismiss
   }) => {
     const vd = V();
-    const todayMemories = latestMemories == null ? INITIAL_SESSION_MEMORIES : latestMemories;
-    const total = 10 + todayMemories.length;
+    /* 时间线与 MOMENTS 计数都从「还在的记忆」派生:S13/S15 删掉的既不上墙,也不计数 */
+    const groups = [];
+    memKept.forEach(m => {
+      const g = groups.find(x => x.label === m.group);
+      g ? g.items.push(m) : groups.push({
+        label: m.group,
+        items: [m]
+      });
+    });
+    const sessionKept = memKept.filter(m => m.session);
     return /*#__PURE__*/React.createElement("div", {
       className: "scr"
     }, /*#__PURE__*/React.createElement("div", {
@@ -2822,7 +2812,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "th-title"
     }, "\u56DE\u5FC6"), /*#__PURE__*/React.createElement("div", {
       className: "th-count"
-    }, "ECHO DIARY \xB7 ", total, " MOMENTS")), /*#__PURE__*/React.createElement("button", {
+    }, "ECHO DIARY \xB7 ", memKept.length, " MOMENT", memKept.length === 1 ? '' : 'S')), /*#__PURE__*/React.createElement("button", {
       style: {
         border: 'none',
         background: 'var(--surface)',
@@ -2843,44 +2833,21 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       size: 19
     }))), /*#__PURE__*/React.createElement("div", {
       className: "timeline"
-    }, todayMemories.length > 0 && /*#__PURE__*/React.createElement("div", {
-      className: "tl-group"
+    }, groups.map(g => /*#__PURE__*/React.createElement("div", {
+      className: "tl-group",
+      key: g.label
     }, /*#__PURE__*/React.createElement("div", {
       className: "tl-dot"
     }), /*#__PURE__*/React.createElement("div", {
       className: "tl-date"
-    }, "\u4ECA\u5929 \xB7 07-09"), /*#__PURE__*/React.createElement("div", {
+    }, g.label), /*#__PURE__*/React.createElement("div", {
       className: "tl-cards"
-    }, todayMemories.map(memory => /*#__PURE__*/React.createElement("div", {
+    }, g.items.map(m => /*#__PURE__*/React.createElement("div", {
       className: "mem-card",
-      key: memory.id
+      key: m.id
     }, /*#__PURE__*/React.createElement("div", {
       className: "mc-date"
-    }, "\u901A\u8BDD\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("h4", null, memory.title), /*#__PURE__*/React.createElement("p", null, memory.content))))), /*#__PURE__*/React.createElement("div", {
-      className: "tl-group"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "tl-dot"
-    }), /*#__PURE__*/React.createElement("div", {
-      className: "tl-date"
-    }, "07-02"), /*#__PURE__*/React.createElement("div", {
-      className: "tl-cards"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "mem-card"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "mc-date"
-    }, "\u901A\u8BDD\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("h4", null, "\u60F3\u53BB\u770B\u4E00\u6B21\u6D77"), /*#__PURE__*/React.createElement("p", null, "\u5DE5\u4F5C\u5FD9\u5230\u5FD8\u4E86\u5B63\u8282\uFF0C\u60F3\u627E\u4E2A\u4E0D\u4E0B\u96E8\u7684\u5468\u672B\u53BB\u6D77\u8FB9\uFF0C\u542C\u4E00\u4E0B\u5348\u6D77\u6D6A\u3002")))), /*#__PURE__*/React.createElement("div", {
-      className: "tl-group"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "tl-dot"
-    }), /*#__PURE__*/React.createElement("div", {
-      className: "tl-date"
-    }, "06-28"), /*#__PURE__*/React.createElement("div", {
-      className: "tl-cards"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "mem-card"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "mc-date"
-    }, "\u901A\u8BDD\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("h4", null, "\u52A0\u73ED\u540E\u7684\u90A3\u7897\u9762"), /*#__PURE__*/React.createElement("p", null, "\u5341\u4E00\u70B9\u4E0B\u73ED\uFF0C\u697C\u4E0B\u9762\u9986\u53EA\u5269\u6700\u540E\u4E00\u7897\uFF0C\u89C9\u5F97\u88AB\u4E16\u754C\u6E29\u67D4\u4E86\u4E00\u4E0B\u3002")))), /*#__PURE__*/React.createElement("div", {
+    }, "\u901A\u8BDD\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("h4", null, m.title), /*#__PURE__*/React.createElement("p", null, m.body)))))), /*#__PURE__*/React.createElement("div", {
       className: "tl-group"
     }, /*#__PURE__*/React.createElement("div", {
       className: "tl-dot",
@@ -2890,7 +2857,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       }
     }), /*#__PURE__*/React.createElement("div", {
       className: "tl-date"
-    }, "02-10 \xB7 DAY 1"), /*#__PURE__*/React.createElement("div", {
+    }, "03-14 \xB7 DAY 1"), /*#__PURE__*/React.createElement("div", {
       className: "tl-cards"
     }, /*#__PURE__*/React.createElement("div", {
       className: "mem-card vow-mini",
@@ -2913,15 +2880,15 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       size: 26
     })))))), showContinuation && /*#__PURE__*/React.createElement("div", {
       className: "continuation-card"
-    }, /*#__PURE__*/React.createElement("h4", null, todayMemories.length ? '记忆已经收进回忆' : '本次没有保留记忆'), /*#__PURE__*/React.createElement("p", null, todayMemories.length ? '在之后的普通对话里，TA 会根据语境自然想起，而不需要通过特定入口。' : '被删除的内容不会进入回忆，TA 之后也不会再提起。'), /*#__PURE__*/React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("h4", null, sessionKept.length ? '记忆已经收进回忆' : '本次没有保留记忆'), /*#__PURE__*/React.createElement("p", null, sessionKept.length ? '在之后的普通对话里，TA 会根据语境自然想起。' : '被删除的内容不会进入回忆，TA 之后也不会再提起。'), /*#__PURE__*/React.createElement("div", {
       className: "continuation-actions"
-    }, todayMemories.length ? /*#__PURE__*/React.createElement("button", {
+    }, sessionKept.length ? /*#__PURE__*/React.createElement("button", {
       className: "btn btn-primary tour-pulse-button",
       onClick: onContinue
     }, "\u770B\u770B\u8BB0\u5FC6\u5982\u4F55\u5EF6\u7EED") : /*#__PURE__*/React.createElement("button", {
       className: "btn btn-primary",
       onClick: onDismiss
-    }, "\u7EE7\u7EED\u81EA\u7531\u63A2\u7D22"), todayMemories.length > 0 && /*#__PURE__*/React.createElement("button", {
+    }, "\u7EE7\u7EED\u81EA\u7531\u63A2\u7D22"), sessionKept.length > 0 && /*#__PURE__*/React.createElement("button", {
       className: "quiet",
       onClick: onDismiss
     }, "\u81EA\u7531\u63A2\u7D22"))));
@@ -2939,6 +2906,12 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     who: 'ai',
     text: '那就慢慢打字，不着急。刚才说到小时候——后来呢？'
   }];
+  /* 续聊开场白:按记忆定制,不是复述卡片标题,而是接续这条记忆本身悬而未决的细节——
+     桉树叶=呼应记忆诞生的场景(原记忆也是路过花店触发的);看海计划=呼应"还没说完的往事"这个悬念 */
+  const CONTINUATION_OPENERS = {
+    1: '又想起[mem]桉树叶的香气[/mem]，今天路过一家花店，好像每次闻到类似的味道我都会想到你说的那个瞬间。',
+    2: '那个[mem]没兑现的看海计划[/mem]，想和你一起去，听你把那段往事讲完。'
+  };
   const SCREENS = [{
     id: 'home',
     name: '8 · 主页'
@@ -2975,7 +2948,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
     }] : initScreen === 'text' ? CHAT_SEED : null);
     const setChatMsgs = updater => setChat(prev => updater(prev || CHAT_SEED));
     const [voiceDone, setVoiceDone] = useState(false); // 是否完整听完过一次语音通话(决定文字页返回是否走记忆卡收尾)
-    const [latestMemories, setLatestMemories] = useState(null);
+    /* 还在的记忆(读共享真源 VMEM;切批次会整体重挂载,所以进来拿到的一定是最新的) */
+    const [memKept, setMemKept] = useState(() => window.VMEM.kept());
     const [showContinuation, setShowContinuation] = useState(false);
     const [continuationMode, setContinuationMode] = useState(false);
     /* 挂断语音:把这段语音的转写(我说的/TA 说的)并入文字页的同一条会话,系统提示由 go() 追加在其后 */
@@ -2988,23 +2962,24 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       });
       setTourDone(true);
     };
-    const finishMemoryFlow = kept => {
+    /* 收进回忆:把这次删掉的 id 落到共享真源,主页/回忆/记忆管理/话题卡随即都不再出现它们 */
+    const finishMemoryFlow = (deletedIds, kept) => {
       finishTour();
-      setLatestMemories(kept);
+      window.VMEM.commit(deletedIds);
+      setMemKept(window.VMEM.kept());
       setShowContinuation(true);
     };
     const dismissContinuation = () => setShowContinuation(false);
     const startContinuation = () => {
-      const memory = latestMemories && latestMemories[0];
+      const memory = memKept.filter(m => m.session)[0];
       if (!memory) return;
-      const recalled = memory.content.replace(/[。！？!?]+$/, '');
       setShowContinuation(false);
       setVoiceDone(false);
       setContinuationMode(true);
       setChat([{
         who: 'ai',
         mem: true,
-        text: `我还记得你说过[mem]${recalled}[/mem]。如果愿意，就从你记得最清楚的地方继续讲吧。`
+        text: CONTINUATION_OPENERS[memory.id]
       }]);
       setScr('text');
     };
@@ -3043,7 +3018,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       home: /*#__PURE__*/React.createElement(Home, {
         go: go,
         emptyMode: emptyMode,
-        tourDone: tourDone
+        tourDone: tourDone,
+        memKept: memKept
       }),
       voice: /*#__PURE__*/React.createElement(VoiceCall, {
         go: go,
@@ -3067,10 +3043,11 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       end: /*#__PURE__*/React.createElement(EndCall, {
         go: go,
         onFinish: finishMemoryFlow,
+        guideSeen: tourDone,
         key: "end"
       }),
       moments: /*#__PURE__*/React.createElement(Moments, {
-        latestMemories: latestMemories,
+        memKept: memKept,
         showContinuation: showContinuation,
         onContinue: startContinuation,
         onDismiss: dismissContinuation
@@ -3141,7 +3118,9 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
 /* ═══ 批次③ 日常与设置 · 源自 03_原型设计/Vowice_原型_批次3_日常与设置_v0.1.html
    在线版差异：① TA/身份从 VDATA 读取 ② Tab 栏「主页/回忆/对话」→ 页内跳批次②
    ③ 日常话题卡 → 带话题进批次②文字对话 ④ 走查侧栏批次链接 → 页内切换（修 404）
-   ⑤ 支持 initScreen ═══ */
+   ⑤ 支持 initScreen
+   ⑥ 记忆读共享真源 window.VMEM（见 template.html）：批次② S13 删掉的记忆不会出现在
+     记忆管理与「来自记忆」话题卡里；这里的改/删也会写回，批次② 的主页与回忆页同步 ═══ */
 (function () {
   const {
     useState,
@@ -3290,46 +3269,26 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   })));
 
   /* ── S15 记忆管理 ── */
-  const INIT_MEMS = [{
-    id: 1,
-    date: '2026-07-09',
-    title: '桉树叶的香气',
-    body: '路过花店闻到桉树叶，站着闻了一会儿，想起了小时候。'
-  }, {
-    id: 2,
-    date: '2026-07-09',
-    title: '小时候与海的事',
-    body: '还没说完的童年往事，和一个没兑现的看海计划有关。'
-  }, {
-    id: 3,
-    date: '2026-07-02',
-    title: '想去看一次海',
-    body: '工作忙到忘了季节，想找个不下雨的周末去海边，听一下午海浪。'
-  }, {
-    id: 4,
-    date: '2026-06-28',
-    title: '加班后的那碗面',
-    body: '十一点下班，楼下面馆只剩最后一碗，觉得被世界温柔了一下。'
-  }];
+  /* 记忆读共享真源 window.VMEM(见 template.html):这里的改/删会落到 VDATA,
+     批次② 的主页「最近的记忆」、S14 回忆页与本批次话题卡都跟着变,不会出现删掉的又冒出来 */
   const MemManage = ({
     go,
-    toast
+    toast,
+    mems,
+    onEdit,
+    onDelete
   }) => {
     const vd = V();
-    const [mems, setMems] = useState(INIT_MEMS);
     const [editing, setEditing] = useState(null);
     const [draft, setDraft] = useState('');
     const [confirmDel, setConfirmDel] = useState(null);
     const save = id => {
-      setMems(ms => ms.map(m => m.id === id ? {
-        ...m,
-        body: draft
-      } : m));
+      onEdit(id, draft);
       setEditing(null);
       toast('已保存，下次通话生效');
     };
     const del = id => {
-      setMems(ms => ms.filter(m => m.id !== id));
+      onDelete(id);
       setConfirmDel(null);
       toast('已删除，TA 不会再提起');
     };
@@ -3337,7 +3296,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "scr"
     }, /*#__PURE__*/React.createElement(PageHead, {
       title: "\u8BB0\u5FC6\u7BA1\u7406",
-      sub: `${mems.length} MOMENTS · 可查看 / 修改 / 删除`,
+      sub: `${mems.length} MOMENT${mems.length === 1 ? '' : 'S'} · 可查看 / 修改 / 删除`,
       onBack: () => go('settings')
     }), /*#__PURE__*/React.createElement("div", {
       className: "scroll",
@@ -3349,7 +3308,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       key: m.id
     }, /*#__PURE__*/React.createElement("div", {
       className: "mc-date"
-    }, m.date), /*#__PURE__*/React.createElement("h4", null, m.title), editing === m.id ? /*#__PURE__*/React.createElement("textarea", {
+    }, m.full), /*#__PURE__*/React.createElement("h4", null, m.title), editing === m.id ? /*#__PURE__*/React.createElement("textarea", {
       rows: 3,
       value: draft,
       onChange: e => setDraft(e.target.value),
@@ -3401,9 +3360,23 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   };
 
   /* ── S16 日常 ── */
+  /* 「聊点什么」的话题卡:from=它引用的记忆 id */
+  const TOPICS = [{
+    src: '来自记忆',
+    from: 3,
+    text: '下个月的海边计划，想好去哪片海了吗？'
+  }, {
+    src: '来自记忆',
+    from: 4,
+    text: '那晚你加班到十一点，这几天有没有好好休息？'
+  }, {
+    src: '今日话题',
+    text: '如果今晚可以立刻去一个地方，你想去哪？'
+  }];
   const Daily = ({
     go,
-    toast
+    toast,
+    mems
   }) => {
     const [playing, setPlaying] = useState(false);
     const [note, setNote] = useState('');
@@ -3440,22 +3413,13 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       className: "sec-label"
     }, "\u804A\u70B9\u4EC0\u4E48"), /*#__PURE__*/React.createElement("div", {
       className: "topic-strip"
-    }, /*#__PURE__*/React.createElement("div", {
+    }, TOPICS.filter(t => !t.from || mems.some(m => m.id === t.from)).map(t => /*#__PURE__*/React.createElement("div", {
       className: "topic-card",
-      onClick: () => goTopic('下个月的海边计划，想好去哪片海了吗？')
+      key: t.text,
+      onClick: () => goTopic(t.text)
     }, /*#__PURE__*/React.createElement("div", {
       className: "tc-src"
-    }, "\u6765\u81EA\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("p", null, "\u4E0B\u4E2A\u6708\u7684\u6D77\u8FB9\u8BA1\u5212\uFF0C\u60F3\u597D\u53BB\u54EA\u7247\u6D77\u4E86\u5417\uFF1F")), /*#__PURE__*/React.createElement("div", {
-      className: "topic-card",
-      onClick: () => goTopic('桉树叶的香气，后来又想起什么了吗？')
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "tc-src"
-    }, "\u6765\u81EA\u8BB0\u5FC6"), /*#__PURE__*/React.createElement("p", null, "\u6849\u6811\u53F6\u7684\u9999\u6C14\uFF0C\u540E\u6765\u53C8\u60F3\u8D77\u4EC0\u4E48\u4E86\u5417\uFF1F")), /*#__PURE__*/React.createElement("div", {
-      className: "topic-card",
-      onClick: () => goTopic('如果今晚可以立刻去一个地方，你想去哪？')
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "tc-src"
-    }, "\u4ECA\u65E5\u8BDD\u9898"), /*#__PURE__*/React.createElement("p", null, "\u5982\u679C\u4ECA\u665A\u53EF\u4EE5\u7ACB\u523B\u53BB\u4E00\u4E2A\u5730\u65B9\uFF0C\u4F60\u60F3\u53BB\u54EA\uFF1F"))), /*#__PURE__*/React.createElement("div", {
+    }, t.src), /*#__PURE__*/React.createElement("p", null, t.text)))), /*#__PURE__*/React.createElement("div", {
       className: "sec-label"
     }, "\u6765\u4FE1 \xB7 \u60F3\u542C\u7684\u65F6\u5019\u518D\u6253\u5F00"), /*#__PURE__*/React.createElement("div", {
       className: 'letter-item' + (playing ? ' playing-row' : '')
@@ -3528,7 +3492,8 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   /* ── S17 设置主页 ── */
   const Settings = ({
     go,
-    toast
+    toast,
+    memCount
   }) => {
     const vd = V();
     return /*#__PURE__*/React.createElement("div", {
@@ -3580,7 +3545,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       onClick: () => go('memories')
     }, /*#__PURE__*/React.createElement("span", null, "\u8BB0\u5FC6\u7BA1\u7406"), /*#__PURE__*/React.createElement("span", {
       className: "sv"
-    }, "12 \u6761 ", /*#__PURE__*/React.createElement(Icon, {
+    }, memCount, " \u6761 ", /*#__PURE__*/React.createElement(Icon, {
       d: I.chevR,
       size: 15
     }))), /*#__PURE__*/React.createElement("button", {
@@ -3771,7 +3736,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   }, /*#__PURE__*/React.createElement(Icon, {
     d: I.shield,
     size: 18
-  })), /*#__PURE__*/React.createElement("span", null, /*#__PURE__*/React.createElement("b", null, "\u539F\u59CB\u5F55\u97F3\u5728\u8F6C\u5199\u5B8C\u4E4B\u540E\u7ACB\u5373\u5220\u9664"), "\uFF0C\u4E0D\u7559\u5B58\uFF0C\u4E0D\u7528\u4E8E\u8BAD\u7EC3\u3002", /*#__PURE__*/React.createElement("br", null), "\u7559\u4E0B\u7684\u4EC5\u4E3A\u6587\u5B57\u8BB0\u5FC6\uFF0C\u800C\u7528\u6237\u53EF\u4EE5\u81EA\u4E3B\u7BA1\u7406\u8BB0\u5FC6\u3002")), /*#__PURE__*/React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("span", null, "\u539F\u59CB\u5F55\u97F3\u5728\u8F6C\u5199\u5B8C\u4E4B\u540E\u7ACB\u5373\u5220\u9664\uFF0C\u4E0D\u7559\u5B58\uFF0C\u4E0D\u7528\u4E8E\u8BAD\u7EC3\u3002\u7559\u4E0B\u7684\u4EC5\u4E3A\u6587\u5B57\u8BB0\u5FC6\uFF0C\u4F60\u53EF\u4EE5\u81EA\u4E3B\u7BA1\u7406\u8BB0\u5FC6\u3002")), /*#__PURE__*/React.createElement("div", {
     className: "sec-label"
   }, "\u6570\u636E"), /*#__PURE__*/React.createElement("div", {
     className: "setting-list"
@@ -3853,12 +3818,7 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
   }, /*#__PURE__*/React.createElement(Icon, {
     d: I.chevR,
     size: 15
-  })))), /*#__PURE__*/React.createElement("p", {
-    className: "hint",
-    style: {
-      padding: '8px 28px 20px'
-    }
-  }, "\u5220\u9664\u5373\u5F7B\u5E95\uFF1A\u58F0\u97F3\u914D\u65B9\u3001\u8BB0\u5FC6\u3001\u6765\u4FE1\u5168\u90E8\u6E05\u7A7A\uFF0C\u4E0D\u53EF\u6062\u590D\u3002")));
+  }))))));
 
   /* ── App ── */
   const SCREENS = [{
@@ -3890,18 +3850,33 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
       setTimeout(() => setToastMsg(null), 2000);
     };
     const go = setScr;
+    /* 记忆读共享真源:进批次③ 时会整体重挂载,所以拿到的是批次② S13 处理过之后的最新状态 */
+    const [mems, setMems] = useState(() => window.VMEM.kept());
+    const delMem = id => {
+      window.VMEM.remove(id);
+      setMems(window.VMEM.kept());
+    };
+    const editMem = (id, body) => {
+      window.VMEM.edit(id, body);
+      setMems(window.VMEM.kept());
+    };
     const view = {
       memories: /*#__PURE__*/React.createElement(MemManage, {
         go: go,
-        toast: toast
+        toast: toast,
+        mems: mems,
+        onEdit: editMem,
+        onDelete: delMem
       }),
       daily: /*#__PURE__*/React.createElement(Daily, {
         go: go,
-        toast: toast
+        toast: toast,
+        mems: mems
       }),
       settings: /*#__PURE__*/React.createElement(Settings, {
         go: go,
-        toast: toast
+        toast: toast,
+        memCount: mems.length
       }),
       contact: /*#__PURE__*/React.createElement(Contact, {
         go: go
